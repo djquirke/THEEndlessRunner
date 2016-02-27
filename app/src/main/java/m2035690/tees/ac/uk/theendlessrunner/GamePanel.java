@@ -5,11 +5,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.Timer;
 import java.util.Vector;
 
 /**
@@ -24,13 +26,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     private static Player player;
     public static Vector2f player_offset;
     public static Camera camera;
-    private static Vector<Spike> spikes = new Vector<Spike>();
+    private static Vector<Spike> spikes = new Vector<>();
     private Vector2f downCoords, upCoords;
     private static float SWIPE_DISTANCE_THRESHOLD;
-    private static final float SWIPE_TIME_THRESHOLD = 0.5f;
+    private static final int SWIPE_TIME_THRESHOLD = 500;
 
     private static final long SPIKE_SPAWN_SPEED = 1000;
-    private long startTime;
+    private Stopwatch spikeLastSpawnTime = new Stopwatch();
+    private Stopwatch swipeTime = new Stopwatch();
 
     public GamePanel(Context context)
     {
@@ -93,15 +96,18 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
         player = new Player(BitmapFactory.decodeResource(getResources(), R.mipmap.characters),
                             player_offset,
                             230, 230);
-        player.addAnimation("run", 0, 0, 230, 230, 8, 80, true);
-        player.addAnimation("jump", 0, 230, 230, 230, 2, 10000, false);
-        player.setColRect((int) Utils.pixToDip(55), 0, (int) Utils.pixToDip(55), 0);
+        player.addAnimation("run", 0, 0, 230, 230, 8, 80,
+                            new Rect(Utils.pixToDip(55), 0, Utils.pixToDip(55), 0), false);
+        player.addAnimation("jump", 0, 230, 230, 230, 2, 10000,
+                            new Rect(Utils.pixToDip(55), 0, Utils.pixToDip(55), 0), false);
+        player.addAnimation("slide", 0, 460, 230, 230, 1, 10000,
+                new Rect(Utils.pixToDip(55), Utils.pixToDip(70), 0, 0), true);
 
         //safely start game loop
         thread.setRunning(true);
         thread.start();
 
-        startTime = System.nanoTime();
+        spikeLastSpawnTime.start();
     }
 
     @Override
@@ -117,6 +123,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
                 }
                 downCoords.x = Utils.pixToDip(event.getX());
                 downCoords.y = Utils.pixToDip(event.getY());
+                swipeTime.start();
                 return true;
             case MotionEvent.ACTION_UP:
                 upCoords.x = Utils.pixToDip(event.getX());
@@ -124,17 +131,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
 
                 float xdif = upCoords.x - downCoords.x;
                 float ydif = upCoords.y - downCoords.y;
+                System.out.println(swipeTime.elapsed());
                 //System.out.println(xdif + " " + ydif + " " + Math.abs(xdif) + " " + Math.abs(ydif));
-                if(Math.abs(ydif) > Math.abs(xdif) && Math.abs(ydif) > SWIPE_DISTANCE_THRESHOLD)
+                if(Math.abs(ydif) > Math.abs(xdif) &&
+                         Math.abs(ydif) > SWIPE_DISTANCE_THRESHOLD &&
+                         swipeTime.elapsed() < SWIPE_TIME_THRESHOLD)
                 {
-                    if(ydif < 0)
-                    {
-                        player.Jump();
-                    }
-                    else
-                    {
-                        //slide
-                    }
+                    if(ydif < 0) player.Jump();
+                    else player.Slide();
                 }
 
                 return true;
@@ -150,18 +154,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
             player.update();
             camera.setCamera(player.getX() - player_offset.x, player.getY() - player_offset.y,
                              (int)WIDTH, (int)HEIGHT);
-
-            long elapsed = (System.nanoTime() - startTime) / 1000000;
-            if(elapsed > SPIKE_SPAWN_SPEED)
+            
+            if(spikeLastSpawnTime.elapsed() > SPIKE_SPAWN_SPEED)
             {
                 Bitmap spike = BitmapFactory.decodeResource(getResources(), R.mipmap.spike);
                 Spike temp = new Spike(spike,
                         new Vector2f(player.getX() + 1000, player_offset.y + player.getHeight() - Utils.pixToDip(spike.getHeight())),
                         5);
-                temp.setColRect((int)Utils.pixToDip(40), 0, (int)Utils.pixToDip(40), 0);
+                temp.setColRect(Utils.pixToDip(40), 0, Utils.pixToDip(40), 0);
                 spikes.add(temp);
 
-                startTime = System.nanoTime();
+                spikeLastSpawnTime.start(); 
             }
         }
     }
@@ -171,7 +174,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     {
         if(canvas != null)
         {
-            canvas.drawColor(Color.BLACK); //reset canvas to black
+            canvas.drawColor(Color.YELLOW); //reset canvas to black
 
             player.draw(canvas);
             for(Spike spike : spikes)
