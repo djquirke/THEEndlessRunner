@@ -24,4 +24,14 @@
             android:onClick="onBackClick" />
     </LinearLayout>
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/Play"
+        android:id="@+id/btn_play"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="86dp"
+        android:onClick="onPlayClick" />
+
 </RelativeLayout>

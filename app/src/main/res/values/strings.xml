@@ -8,4 +8,6 @@
     <string name="options">Options</string>
     <string name="shop">Shop</string>
     <string name="back">Back</string>
+    <string name="title_activity_game">Game</string>
+    <string name="Play">Play</string>
 </resources>

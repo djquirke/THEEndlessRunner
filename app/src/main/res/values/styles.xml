@@ -10,5 +10,11 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
+    <style name="rm_title_bar.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+    <style name="rm_title_bar.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="rm_title_bar.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 </resources>
