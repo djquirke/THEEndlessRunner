@@ -4,19 +4,18 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
 /**
- * Created by Dan on 27/02/2016.
+ * Created by Dan on 28/02/2016.
  */
-public class Spike extends GameObject {
+public class Wall extends GameObject {
     Bitmap image;
 
-    public Spike(Bitmap image, Vector2f pos, int damage)
+    public Wall(Bitmap image, Vector2f pos)
     {
         this.image = image;
-        this.damage = damage;
         this.pos = pos;
-        this.height = (int)Utils.pixToDip((float)image.getHeight());
-        this.width = (int)Utils.pixToDip((float)image.getWidth());
-        this.tag = "spike";
+        this.height = Utils.pixToDip(image.getHeight());
+        this.width = Utils.pixToDip(image.getWidth());
+        this.tag = "wall";
     }
 
     @Override
@@ -25,6 +24,7 @@ public class Spike extends GameObject {
         if(this.getRect().intersect(GamePanel.camera.getRect()))
         {
             Vector2f campos = GamePanel.camera.getPos();
+
             canvas.drawBitmap(image, Utils.dipToPix(pos.x - campos.x),
                     Utils.dipToPix(pos.y - campos.y), null);
         }

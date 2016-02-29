@@ -1,6 +1,8 @@
 package m2035690.tees.ac.uk.theendlessrunner;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
 
 /**
@@ -11,6 +13,8 @@ public class GameObject {
     protected float dx, dy;
     protected int width, height;
     protected Rect collisionRect = new Rect();
+    protected String tag;
+    protected int damage;
 
     public void setX(int x) {this.pos.x = x;}
     public void setY(int y) {this.pos.y = y;}
@@ -47,4 +51,12 @@ public class GameObject {
 
     public void update() {}
     public void draw(Canvas canvas) {}
+    public void drawDebug(Canvas canvas, int colRectCol)
+    {
+        Vector2f campos = GamePanel.camera.getPos();
+        Paint p = new Paint(colRectCol);
+        canvas.drawRect(Utils.dipToPix(getColRect().left - campos.x), Utils.dipToPix(getColRect().top - campos.y),
+                Utils.dipToPix(getColRect().right - campos.x), Utils.dipToPix(getColRect().bottom - campos.y),
+                p);
+    }
 }

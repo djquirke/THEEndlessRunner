@@ -11,7 +11,6 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import java.util.Timer;
 import java.util.Vector;
 
 /**
@@ -27,6 +26,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     public static Vector2f player_offset;
     public static Camera camera;
     private static Vector<Spike> spikes = new Vector<>();
+    private static Vector<Wall> walls = new Vector<>();
     private Vector2f downCoords, upCoords;
     private static float SWIPE_DISTANCE_THRESHOLD;
     private static final int SWIPE_TIME_THRESHOLD = 500;
@@ -43,7 +43,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
         DENSITY = displayMetrics.density;
         WIDTH = displayMetrics.widthPixels / DENSITY;
         HEIGHT = displayMetrics.heightPixels / DENSITY;
-        System.out.println(WIDTH + " " + HEIGHT + " " + DENSITY);
+        //System.out.println(WIDTH + " " + HEIGHT + " " + DENSITY);
 
         SWIPE_DISTANCE_THRESHOLD = HEIGHT / 5;
 
@@ -95,13 +95,37 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     {
         player = new Player(BitmapFactory.decodeResource(getResources(), R.mipmap.characters),
                             player_offset,
-                            230, 230);
+                            230, 230, 100);
         player.addAnimation("run", 0, 0, 230, 230, 8, 80,
-                            new Rect(Utils.pixToDip(55), 0, Utils.pixToDip(55), 0), false);
+                            new Rect(Utils.pixToDip(55), 0, Utils.pixToDip(55), 0), true);
         player.addAnimation("jump", 0, 230, 230, 230, 2, 10000,
                             new Rect(Utils.pixToDip(55), 0, Utils.pixToDip(55), 0), false);
         player.addAnimation("slide", 0, 460, 230, 230, 1, 10000,
-                new Rect(Utils.pixToDip(55), Utils.pixToDip(70), 0, 0), true);
+                            new Rect(Utils.pixToDip(55), Utils.pixToDip(70), 0, 0), false);
+
+        spikes.clear();
+        walls.clear();
+
+        //TODO: remove when proper level loading complete
+        Bitmap wall_img = BitmapFactory.decodeResource(getResources(), R.mipmap.wall);
+        //temp: add 100 floor tiles
+        for(int i = 0; i < 100; i++)
+        {
+            Wall temp = new Wall(wall_img,
+                                 new Vector2f(player_offset.x + i * Utils.pixToDip(wall_img.getWidth()),
+                                              player_offset.y + player.getHeight()));
+
+            walls.add(temp);
+
+        }
+        Wall temp = new Wall(wall_img,
+                new Vector2f(player_offset.x + 300,
+                        player_offset.y - 1.25f * player.getHeight()));
+        walls.add(temp);
+        Wall temp2 = new Wall(wall_img,
+                new Vector2f(player_offset.x + 900,
+                        player_offset.y - 3 * player.getHeight()));
+        walls.add(temp2);
 
         //safely start game loop
         thread.setRunning(true);
@@ -131,8 +155,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
 
                 float xdif = upCoords.x - downCoords.x;
                 float ydif = upCoords.y - downCoords.y;
-                System.out.println(swipeTime.elapsed());
-                //System.out.println(xdif + " " + ydif + " " + Math.abs(xdif) + " " + Math.abs(ydif));
+
                 if(Math.abs(ydif) > Math.abs(xdif) &&
                          Math.abs(ydif) > SWIPE_DISTANCE_THRESHOLD &&
                          swipeTime.elapsed() < SWIPE_TIME_THRESHOLD)
@@ -164,8 +187,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
                 temp.setColRect(Utils.pixToDip(40), 0, Utils.pixToDip(40), 0);
                 spikes.add(temp);
 
-                spikeLastSpawnTime.start(); 
+                spikeLastSpawnTime.start();
             }
+
+            //check collisions
+            if(player.getAlive())
+                checkCollisions();
         }
     }
 
@@ -176,31 +203,37 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
         {
             canvas.drawColor(Color.YELLOW); //reset canvas to black
 
-            player.draw(canvas);
             for(Spike spike : spikes)
             {
+                //spike.drawDebug(canvas, Color.RED);
                 spike.draw(canvas);
             }
+            for(Wall wall : walls)
+            {
+                wall.draw(canvas);
+                //wall.drawDebug(canvas, Color.GREEN);
+            }
+            player.draw(canvas);
         }
     }
 
-    public static boolean checkCollision()
+    public void checkCollisions()
     {
-        boolean ret = false;
-
         for(Spike spike : spikes)
         {
-            if(spike.getColRect().intersect(player.getColRect()))
-            {
-                System.out.println("Collision detected, player rect: " + player.getColRect().left + " " +
-                                   player.getColRect().top + " " + player.getColRect().right + " " +
-                                   player.getColRect().bottom + ", spike: " + spike.getColRect().left + " " +
-                        spike.getColRect().top + " " + spike.getColRect().right + " " +
-                        spike.getColRect().bottom);
-                ret = true;
-            }
+            player.checkCollision(spike);
         }
 
-        return ret;
+        for(Wall wall : walls)
+        {
+            player.checkCollision(wall);
+        }
+
+        //player.collisionCheckComplete();
+    }
+
+    public static void Reset()
+    {
+        spikes.clear();
     }
 }

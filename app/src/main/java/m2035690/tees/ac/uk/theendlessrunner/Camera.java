@@ -8,17 +8,17 @@ import android.graphics.Rect;
 public class Camera {
     private Vector2f pos;
     private int width, height;
-    private Rect dimensions;
+    private Rect rect;
 
     public Vector2f getPos() {return pos;}
-    public Rect getDims() {return dimensions;}
+    public Rect getRect() {return rect;}
 
     protected Camera(float x, float y, int width, int height)
     {
         pos = new Vector2f(x, y);
         this.width = width;
         this.height = height;
-        dimensions = new Rect((int)x, (int)y, width, height);
+        rect = new Rect((int)x, (int)y, width, height);
     }
 
     public void setCamera(float xpos, float ypos, int map_width, int map_height)
@@ -33,7 +33,7 @@ public class Camera {
 
         //System.out.println("camera pos:" + this.pos.x + " " + this.pos.y);
 
-        dimensions.set((int)pos.x, (int)pos.y, (int)pos.x + width, (int)pos.y + height);
+        rect.set((int)pos.x, (int)pos.y, (int)pos.x + width, (int)pos.y + height);
     }
 
     public void setCamera(Vector2f pos, int map_width, int map_height)
@@ -45,8 +45,8 @@ public class Camera {
 
         this.pos.x = pos.x - 100;
         this.pos.y = pos.y - (GamePanel.HEIGHT / 2 - 47.5f);
-        System.out.println(this.pos.x + " " + this.pos.y);
-        dimensions.set((int)this.pos.x, (int)this.pos.y,
+        //System.out.println(this.pos.x + " " + this.pos.y);
+        rect.set((int)this.pos.x, (int)this.pos.y,
                        (int)this.pos.x + width, (int)this.pos.y + height);
     }
 }

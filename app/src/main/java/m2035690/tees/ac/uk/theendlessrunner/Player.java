@@ -2,8 +2,6 @@ package m2035690.tees.ac.uk.theendlessrunner;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Rect;
 
 import java.util.HashMap;
@@ -15,23 +13,36 @@ public class Player extends GameObject {
     private Bitmap spritesheet;
     private int score;
     private int moveSpeed;
-    private static final float JUMP_VELOCITY = -13;
-    private static final float GRAVITY = 1.f;
-    private static final long SLIDE_TIME = 500;
+    private static final float JUMP_VELOCITY = -15;
+    private static final float VELOCITY_GRAVITY = 1.f;
+    private static final float GRAVITY = 10.f;
+    private static final long SLIDE_TIME = 750;
+    private static final int MOVE_SPEED = 7;
     private float velocity;
     private boolean jump, slide, playing;
     private HashMap<String, Animation> animations = new HashMap<>();
     private String currentAnimation;
     private Stopwatch slideRunTime = new Stopwatch();
+    private Vector2f prev_pos;
+    private boolean hitOnce;
+    private static final long DEATH_TIME = 1500;
+    private Stopwatch timeDead = new Stopwatch();
 
-    public Player(Bitmap res, Vector2f pos, int w, int h)
+    Rect colRect = new Rect();
+    private boolean isAlive;
+
+    public Player(Bitmap res, Vector2f pos, int w, int h, int health)
     {
         this.pos = new Vector2f(pos);
-        moveSpeed = 7;
+        this.prev_pos = new Vector2f(pos);
+        moveSpeed = MOVE_SPEED;
         height = Utils.pixToDip(h);
         width = Utils.pixToDip(w);
 
         spritesheet = res;
+        tag = "player";
+        hitOnce = false;
+        isAlive = true;
     }
 
     public void addAnimation(String name, int xpos, int ypos, int frame_w, int frame_h, int numFrames, int delay, Rect colRect, boolean setActive)
@@ -40,7 +51,6 @@ public class Player extends GameObject {
 
         for(int i = 0; i < numFrames; i++)
         {
-            System.out.println(i * frame_w);
             image[i] = Bitmap.createBitmap(spritesheet, i * frame_w + xpos, ypos, frame_w, frame_h);
         }
 
@@ -75,36 +85,64 @@ public class Player extends GameObject {
     @Override
     public void update()
     {
-        getAnimation().update();
+        if(isAlive)
+        {
+            getAnimation().update();
+
+            prev_pos.setEqual(pos);
+
+            if(slide)
+            {
+                if(slideRunTime.elapsed() > SLIDE_TIME)
+                {
+                    stopSliding();
+                }
+            }
+        }
 
         pos.x += moveSpeed;
-        //System.out.println("player pos:" + pos.x + " " + pos.y);
+        pos.y += GRAVITY;
 
         if(jump)
         {
+            pos.y -= GRAVITY;
             pos.y += velocity;
-            velocity += GRAVITY;
+            velocity += VELOCITY_GRAVITY;
 
             if(velocity >= 0) getAnimation().setFrame(1);
-            if(GamePanel.checkCollision()) setPlaying(false);
-
-            if(pos.y > GamePanel.player_offset.y)
-            {
-                pos.y = GamePanel.player_offset.y;
-                jump = false;
-                velocity = 0;
-                setAnimation("run");
-            }
         }
 
-        if(slide)
+        if(!isAlive && timeDead.elapsed() > DEATH_TIME)
         {
-            if(slideRunTime.elapsed() > SLIDE_TIME)
-            {
-                slide = false;
-                setAnimation("run");
-            }
+            Restart();
         }
+
+    }
+
+    private void Restart()
+    {
+        isAlive = true;
+        pos.y = GamePanel.player_offset.y;
+        pos.x = GamePanel.player_offset.x;
+        moveSpeed = MOVE_SPEED;
+        stopSliding();
+        stopJumping();
+
+        //TODO: remove this when proper loading implemented
+        GamePanel.Reset();
+    }
+
+    private void stopJumping()
+    {
+        jump = false;
+        velocity = 0;
+        setAnimation("run");
+    }
+
+    private void stopSliding()
+    {
+        slide = false;
+        setAnimation("run");
     }
 
     @Override
@@ -112,13 +150,51 @@ public class Player extends GameObject {
     {
         Vector2f campos = GamePanel.camera.getPos();
 
-        Paint p = new Paint(Color.BLUE);
-        canvas.drawRect(Utils.dipToPix(getColRect().left - campos.x), Utils.dipToPix(getColRect().top - campos.y),
-                Utils.dipToPix(getColRect().right - campos.x), Utils.dipToPix(getColRect().bottom - campos.y),
-                p);
-
         canvas.drawBitmap(getAnimation().getImage(), Utils.dipToPix(pos.x - campos.x),
                 Utils.dipToPix(pos.y - campos.y), null);
+    }
+
+    public void checkCollision(GameObject other)
+    {
+        if(colRect.setIntersect(other.getColRect(), this.getColRect()) && isAlive)
+        {
+            if(other.tag == "spike")
+            {
+                Die();
+            }
+            else if (other.tag == "wall")
+            {
+                if(jump)
+                    stopJumping();
+
+//                System.out.println("wall intersection:" + colRect.left + " " + colRect.top + " " + colRect.right
+//                                    + " " + colRect.bottom);
+
+                Rect playerRect = getColRect();
+
+                if(colRect.top == playerRect.top) Die();
+                else if(colRect.top > playerRect.top)
+                {
+                    if(colRect.left == playerRect.left && colRect.right == playerRect.right)
+                    {
+                        pos.y = prev_pos.y;
+                    }
+                    if(!hitOnce) {hitOnce = true; return;}
+                    else {pos.y = prev_pos.y; hitOnce = false;}
+                }
+
+            }
+        }
+    }
+
+    private void Die()
+    {
+        moveSpeed = 0;
+        stopJumping();
+        stopSliding();
+        Jump();
+        timeDead.start();
+        isAlive = false;
     }
 
     private void setAnimation(String key)
@@ -133,4 +209,13 @@ public class Player extends GameObject {
     public boolean getPlaying() {return playing;}
     public void setPlaying(boolean b) {playing = b;}
     private Animation getAnimation() {return animations.get(currentAnimation);}
+
+    public void collisionCheckComplete()
+    {
+        if(hitOnce)
+        {
+            Die();
+        }
+    }
+    public boolean getAlive() {return isAlive;}
 }

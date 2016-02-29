@@ -71,4 +71,10 @@ public class Vector2f {
         this.y /= other.y;
         return this;
     }
+
+    public void setEqual(Vector2f other)
+    {
+        this.x = other.x;
+        this.y = other.y;
+    }
 }
