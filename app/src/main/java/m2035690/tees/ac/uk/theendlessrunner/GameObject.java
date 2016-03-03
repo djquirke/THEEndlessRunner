@@ -14,7 +14,6 @@ public class GameObject {
     protected int width, height;
     protected Rect collisionRect = new Rect();
     protected String tag;
-    protected int damage;
 
     public void setX(int x) {this.pos.x = x;}
     public void setY(int y) {this.pos.y = y;}
@@ -54,7 +53,9 @@ public class GameObject {
     public void drawDebug(Canvas canvas, int colRectCol)
     {
         Vector2f campos = GamePanel.camera.getPos();
-        Paint p = new Paint(colRectCol);
+        Paint p = new Paint();
+        p.setColor(colRectCol);
+        p.setAlpha(200);
         canvas.drawRect(Utils.dipToPix(getColRect().left - campos.x), Utils.dipToPix(getColRect().top - campos.y),
                 Utils.dipToPix(getColRect().right - campos.x), Utils.dipToPix(getColRect().bottom - campos.y),
                 p);

@@ -9,10 +9,9 @@ import android.graphics.Canvas;
 public class Spike extends GameObject {
     Bitmap image;
 
-    public Spike(Bitmap image, Vector2f pos, int damage)
+    public Spike(Bitmap image, Vector2f pos)
     {
         this.image = image;
-        this.damage = damage;
         this.pos = pos;
         this.height = (int)Utils.pixToDip((float)image.getHeight());
         this.width = (int)Utils.pixToDip((float)image.getWidth());

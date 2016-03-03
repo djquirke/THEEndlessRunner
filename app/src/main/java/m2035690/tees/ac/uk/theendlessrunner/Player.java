@@ -10,14 +10,16 @@ import java.util.HashMap;
  * Created by Dan on 24/02/2016.
  */
 public class Player extends GameObject {
-    private Bitmap spritesheet;
-    private int score;
-    private int moveSpeed;
     private static final float JUMP_VELOCITY = -15;
     private static final float VELOCITY_GRAVITY = 1.f;
     private static final float GRAVITY = 10.f;
     private static final long SLIDE_TIME = 750;
     private static final int MOVE_SPEED = 7;
+    private static final long DEATH_TIME = 1500;
+
+    private Bitmap spritesheet;
+    private int score;
+    private int moveSpeed;
     private float velocity;
     private boolean jump, slide, playing;
     private HashMap<String, Animation> animations = new HashMap<>();
@@ -25,7 +27,6 @@ public class Player extends GameObject {
     private Stopwatch slideRunTime = new Stopwatch();
     private Vector2f prev_pos;
     private boolean hitOnce;
-    private static final long DEATH_TIME = 1500;
     private Stopwatch timeDead = new Stopwatch();
 
     Rect colRect = new Rect();
@@ -38,7 +39,6 @@ public class Player extends GameObject {
         moveSpeed = MOVE_SPEED;
         height = Utils.pixToDip(h);
         width = Utils.pixToDip(w);
-
         spritesheet = res;
         tag = "player";
         hitOnce = false;
@@ -122,8 +122,8 @@ public class Player extends GameObject {
     private void Restart()
     {
         isAlive = true;
-        pos.y = GamePanel.player_offset.y;
-        pos.x = GamePanel.player_offset.x;
+        pos.y = GamePanel.player_spawn.y;
+        pos.x = GamePanel.player_spawn.x;
         moveSpeed = MOVE_SPEED;
         stopSliding();
         stopJumping();
