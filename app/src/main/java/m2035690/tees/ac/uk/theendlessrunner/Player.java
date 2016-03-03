@@ -25,7 +25,7 @@ public class Player extends GameObject {
     private HashMap<String, Animation> animations = new HashMap<>();
     private String currentAnimation;
     private Stopwatch slideRunTime = new Stopwatch();
-    private Vector2f prev_pos;
+    //private Vector2f prev_pos;
     private boolean hitOnce;
     private Stopwatch timeDead = new Stopwatch();
 
@@ -35,7 +35,7 @@ public class Player extends GameObject {
     public Player(Bitmap res, Vector2f pos, int w, int h, int health)
     {
         this.pos = new Vector2f(pos);
-        this.prev_pos = new Vector2f(pos);
+        //this.prev_pos = new Vector2f(pos);
         moveSpeed = MOVE_SPEED;
         height = Utils.pixToDip(h);
         width = Utils.pixToDip(w);
@@ -89,7 +89,7 @@ public class Player extends GameObject {
         {
             getAnimation().update();
 
-            prev_pos.setEqual(pos);
+            //prev_pos.setEqual(pos);
 
             if(slide)
             {
@@ -122,8 +122,7 @@ public class Player extends GameObject {
     private void Restart()
     {
         isAlive = true;
-        pos.y = GamePanel.player_spawn.y;
-        pos.x = GamePanel.player_spawn.x;
+        pos.setEqual(GamePanel.player_spawn);
         moveSpeed = MOVE_SPEED;
         stopSliding();
         stopJumping();
@@ -177,12 +176,11 @@ public class Player extends GameObject {
                 {
                     if(colRect.left == playerRect.left && colRect.right == playerRect.right)
                     {
-                        pos.y = prev_pos.y;
+                        pos.y -= (colRect.bottom - colRect.top);//prev_pos.y;
                     }
                     if(!hitOnce) {hitOnce = true; return;}
-                    else {pos.y = prev_pos.y; hitOnce = false;}
+                    else {pos.y -= (colRect.bottom - colRect.top); hitOnce = false;}
                 }
-
             }
         }
     }

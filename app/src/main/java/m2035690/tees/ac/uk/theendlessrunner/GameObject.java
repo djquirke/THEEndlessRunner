@@ -17,7 +17,7 @@ public class GameObject {
 
     public void setX(int x) {this.pos.x = x;}
     public void setY(int y) {this.pos.y = y;}
-    public void setPos(Vector2f pos) {this.pos = pos;}
+    public void setPos(Vector2f pos) {this.pos.x = pos.x; this.pos.y = pos.y;}
     public void setPos(float x, float y) {this.pos.x = x; this.pos.y = y;}
     public float getX() {return pos.x;}
     public float getY() {return pos.y;}

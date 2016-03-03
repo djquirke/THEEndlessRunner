@@ -27,14 +27,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     public static Vector2f camera_offset;
     public static Camera camera;
     private static Vector<GameObject> entities = new Vector<>();
-    //private static Vector<Wall> walls = new Vector<>();
     private Vector2f downCoords, upCoords;
     private static float SWIPE_DISTANCE_THRESHOLD;
     private static final int SWIPE_TIME_THRESHOLD = 500;
     private static int TILE_SIZE;
-
-//    private static final long SPIKE_SPAWN_SPEED = 1000;
-//    private Stopwatch spikeLastSpawnTime = new Stopwatch();
     private Stopwatch swipeTime = new Stopwatch();
     private Map map = new Map();
 
@@ -55,11 +51,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
         camera = new Camera(0, 0, (int)WIDTH, (int)HEIGHT);
         camera_offset = new Vector2f(WIDTH / 8, HEIGHT / 2);
         System.out.println(TILE_SIZE);
-        loadMap("map01");
-
-
-        //player_offset = new Vector2f(100, HEIGHT / 2 - Utils.pixToDip(64)); //replace with point loaded from map
-
 
         downCoords = new Vector2f();
         upCoords = new Vector2f();
@@ -93,7 +84,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
                 int r = (p >> 16) & 0xff;
                 int g = (p >> 8) & 0xff;
                 int b = p & 0xff;
-                //System.out.println(p + " " + r + " " + g + " " + b + " " + j + " " + i);
 
                 if(r == 0 & g == 0 && b == 0) //BLACK = WALL
                 {
@@ -145,6 +135,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     @Override
     public void surfaceDestroyed(SurfaceHolder holder)
     {
+        entities.clear();
+
         boolean retry = true;
         int counter = 0;
 
@@ -167,45 +159,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     @Override
     public void surfaceCreated(SurfaceHolder holder)
     {
-//        player = new Player(BitmapFactory.decodeResource(getResources(), R.mipmap.characters),
-//                            player_offset,
-//                            230, 230, 100);
-//        player.addAnimation("run", 0, 0, 230, 230, 8, 80,
-//                            new Rect(Utils.pixToDip(55), 0, Utils.pixToDip(55), 0), true);
-//        player.addAnimation("jump", 0, 230, 230, 230, 2, 10000,
-//                            new Rect(Utils.pixToDip(55), 0, Utils.pixToDip(55), 0), false);
-//        player.addAnimation("slide", 0, 460, 230, 230, 1, 10000,
-//                new Rect(Utils.pixToDip(55), Utils.pixToDip(70), 0, 0), false);
-//
-//        entities.clear();
-//        //walls.clear();
-//
-//        //TODO: remove when proper level loading complete
-//        Bitmap wall_img = BitmapFactory.decodeResource(getResources(), R.mipmap.wall);
-//        //temp: add 100 floor tiles
-//        for(int i = 0; i < 100; i++)
-//        {
-//            Wall temp = new Wall(wall_img,
-//                                 new Vector2f(player_offset.x + i * Utils.pixToDip(wall_img.getWidth()),
-//                                              player_offset.y + player.getHeight()));
-//
-//            entities.add(temp);
-//
-//        }
-//        Wall temp = new Wall(wall_img,
-//                new Vector2f(player_offset.x + 300,
-//                        player_offset.y - 1.25f * player.getHeight()));
-//        entities.add(temp);
-//        Wall temp2 = new Wall(wall_img,
-//                new Vector2f(player_offset.x + 900,
-//                        player_offset.y - 3 * player.getHeight()));
-//        entities.add(temp2);
+        loadMap("map01");
 
         //safely start game loop
         thread.setRunning(true);
         thread.start();
-
-//        spikeLastSpawnTime.start();
     }
 
     @Override
@@ -249,19 +207,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
         if(player.getPlaying())
         {
             player.update();
-
-            
-//            if(spikeLastSpawnTime.elapsed() > SPIKE_SPAWN_SPEED)
-//            {
-//                Bitmap spike = BitmapFactory.decodeResource(getResources(), R.mipmap.spike);
-//                Spike temp = new Spike(spike,
-//                                       new Vector2f(player.getX() + 1000,
-//                                                    player_offset.y + player.getHeight() - Utils.pixToDip(spike.getHeight())));
-//                temp.setColRect(Utils.pixToDip(40), 0, Utils.pixToDip(40), 0);
-//                entities.add(temp);
-//
-//                spikeLastSpawnTime.start();
-//            }
 
             //check collisions
             if(player.getAlive())
@@ -310,6 +255,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     {
         //entities.clear();
         player.setPos(player_spawn);
-        //TODP: reload level
+        //TODO: reload level
     }
 }
