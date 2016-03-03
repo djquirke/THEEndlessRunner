@@ -7,7 +7,7 @@ import android.graphics.Rect;
  */
 public class Camera {
     private Vector2f pos;
-    private int width, height;
+    private int width, height, map_height, map_width;
     private Rect rect;
 
     public Vector2f getPos() {return pos;}
@@ -18,16 +18,18 @@ public class Camera {
         pos = new Vector2f(x, y);
         this.width = width;
         this.height = height;
+        this.map_height = height;
+        this.map_width = width;
         rect = new Rect((int)x, (int)y, width, height);
     }
 
-    public void setCamera(float xpos, float ypos, int map_width, int map_height)
+    public void setCamera(float xpos, float ypos)
     {
         if(xpos < 0) xpos = 0;
         if(ypos < 0) ypos = 0;
-        //if(ypos > map_height - height) ypos = map_height - height;
-       // if(xpos > map_width - width) xpos = map_width - width;
-
+        if(ypos > map_height - height) ypos = map_height - height;
+        if(xpos > map_width - width) xpos = map_width - width;
+//        System.out.println(map_width + " " + map_height + " " + width + " " + height);
         pos.x = xpos;
         pos.y = ypos;
 
@@ -36,7 +38,7 @@ public class Camera {
         rect.set((int)pos.x, (int)pos.y, (int)pos.x + width, (int)pos.y + height);
     }
 
-    public void setCamera(Vector2f pos, int map_width, int map_height)
+    public void setCamera(Vector2f pos)
     {
         if(pos.x < 0) pos.x = 0;
         if(pos.y < 0) pos.y = 0;
@@ -48,5 +50,24 @@ public class Camera {
         //System.out.println(this.pos.x + " " + this.pos.y);
         rect.set((int)this.pos.x, (int)this.pos.y,
                        (int)this.pos.x + width, (int)this.pos.y + height);
+    }
+
+    public void setMapSize(Vector2f size)
+    {
+        this.map_width = ((int) size.x);
+        this.map_height = (int)size.y;
+    }
+    public void setMapSize(int width, int height)
+    {
+        this.map_width = width;
+        this.map_height = height;
+    }
+    public void setMapHeight(int height)
+    {
+        this.map_height = height;
+    }
+    public void setMapWidth(int width)
+    {
+        this.map_width = width;
     }
 }

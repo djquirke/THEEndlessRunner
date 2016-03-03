@@ -26,7 +26,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     public static Vector2f player_spawn;
     public static Vector2f camera_offset;
     public static Camera camera;
-    private static Vector<GameObject> entities = new Vector<>();
+    private static Vector<GameObject> entities = new Vector<GameObject>();
     private Vector2f downCoords, upCoords;
     private static float SWIPE_DISTANCE_THRESHOLD;
     private static final int SWIPE_TIME_THRESHOLD = 500;
@@ -67,8 +67,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     private void loadMap(String name)
     {
         Bitmap temp = BitmapFactory.decodeResource(getResources(), R.mipmap.map01);
-        map.setHeight(temp.getHeight() * Utils.pixToDip(TILE_SIZE));
-        map.setWidth(temp.getWidth() * Utils.pixToDip(TILE_SIZE));
+        map.setHeight(temp.getHeight() * TILE_SIZE);
+        map.setWidth(temp.getWidth() * TILE_SIZE);
+        camera.setMapHeight(map.getHeight());
+        camera.setMapWidth(map.getWidth());
 
         Bitmap wall_img = BitmapFactory.decodeResource(getResources(), R.mipmap.wall);
         Bitmap wall_slide_img = BitmapFactory.decodeResource(getResources(), R.mipmap.wall_slide);
@@ -87,13 +89,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
 
                 if(r == 0 & g == 0 && b == 0) //BLACK = WALL
                 {
-                    System.out.println("wall found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
+//                    System.out.println("wall found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
                     Wall tempw = new Wall(wall_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE));
                     entities.add(tempw);
                 }
                 else if(r == 255 && g == 0 && b == 0) //RED = SPIKES
                 {
-                    System.out.println("spike found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
+//                    System.out.println("spike found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
                     Spike tempsp = new Spike(spike_img, new Vector2f(j * TILE_SIZE,
                                              i * TILE_SIZE + (TILE_SIZE - Utils.pixToDip(spike_img.getHeight()))));
 
@@ -102,7 +104,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
                 }
                 else if(r == 0 && g == 255 && b == 0) //GREEN = PLAYER SPAWN
                 {
-                    System.out.println("player spawn found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
+//                    System.out.println("player spawn found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
                     player = new Player(player_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE), 230, 230, 100);
                     player.addAnimation("run", 0, 0, 230, 230, 8, 80,
                             new Rect(Utils.pixToDip(55), 0, Utils.pixToDip(55), 0), true);
@@ -112,13 +114,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
                             new Rect(Utils.pixToDip(55), Utils.pixToDip(70), 0, 0), false);
 
                     player_spawn = new Vector2f(j * TILE_SIZE, i * TILE_SIZE);
-                    System.out.println("camera offset:" + camera_offset.x + " " + camera_offset.y);
-                    camera.setCamera(player_spawn.x - camera_offset.x, player_spawn.y - camera_offset.y,
-                            (int)WIDTH, (int)HEIGHT);
+
+                    camera_offset.y -= Utils.pixToDip(230) / 2;
+                    camera.setCamera(player_spawn.x - camera_offset.x, player_spawn.y - camera_offset.y);
                 }
                 else if(r == 127 && g == 127 && b == 127) //GREY = SLIDE UNDER WALL
                 {
-                    System.out.println("wall slide found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
+//                    System.out.println("wall slide found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
                     Wall tempw = new Wall(wall_slide_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE));
                     entities.add(tempw);
                 }
@@ -211,8 +213,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
             //check collisions
             if(player.getAlive())
             {
-                camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y,
-                        (int)WIDTH, (int)HEIGHT);
+                camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
                 checkCollisions();
             }
         }
@@ -248,7 +249,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
 //            player.checkCollision(wall);
 //        }
 
-        //player.collisionCheckComplete();
+        player.collisionCheckComplete();
     }
 
     public static void Reset()

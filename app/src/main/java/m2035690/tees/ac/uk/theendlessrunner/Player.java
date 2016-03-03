@@ -22,11 +22,11 @@ public class Player extends GameObject {
     private int moveSpeed;
     private float velocity;
     private boolean jump, slide, playing;
-    private HashMap<String, Animation> animations = new HashMap<>();
+    private HashMap<String, Animation> animations = new HashMap<String, Animation>();
     private String currentAnimation;
     private Stopwatch slideRunTime = new Stopwatch();
     //private Vector2f prev_pos;
-    private boolean hitOnce;
+    private boolean collidedThisFrame, falling;
     private Stopwatch timeDead = new Stopwatch();
 
     Rect colRect = new Rect();
@@ -41,7 +41,8 @@ public class Player extends GameObject {
         width = Utils.pixToDip(w);
         spritesheet = res;
         tag = "player";
-        hitOnce = false;
+        collidedThisFrame = false;
+        falling = false;
         isAlive = true;
     }
 
@@ -103,6 +104,11 @@ public class Player extends GameObject {
         pos.x += moveSpeed;
         pos.y += GRAVITY;
 
+//        if(falling)
+//        {
+//            return;
+//        }
+
         if(jump)
         {
             pos.y -= GRAVITY;
@@ -163,7 +169,9 @@ public class Player extends GameObject {
             }
             else if (other.tag == "wall")
             {
-                if(jump)
+                collidedThisFrame = true;
+
+                if(jump || falling)
                     stopJumping();
 
 //                System.out.println("wall intersection:" + colRect.left + " " + colRect.top + " " + colRect.right
@@ -174,12 +182,18 @@ public class Player extends GameObject {
                 if(colRect.top == playerRect.top) Die();
                 else if(colRect.top > playerRect.top)
                 {
-                    if(colRect.left == playerRect.left && colRect.right == playerRect.right)
+                    int colRectHeight = colRect.bottom - colRect.top;
+//                    if(colRect.left == playerRect.left && colRect.right == playerRect.right)
+                    if(colRectHeight < this.height / 2)
                     {
                         pos.y -= (colRect.bottom - colRect.top);//prev_pos.y;
                     }
-                    if(!hitOnce) {hitOnce = true; return;}
-                    else {pos.y -= (colRect.bottom - colRect.top); hitOnce = false;}
+                    else
+                    {
+                        Die();
+                    }
+//                    if(!hitOnce) {hitOnce = true; return;}
+//                    else {pos.y -= (colRect.bottom - colRect.top); hitOnce = false;}
                 }
             }
         }
@@ -210,10 +224,17 @@ public class Player extends GameObject {
 
     public void collisionCheckComplete()
     {
-        if(hitOnce)
+        if(!collidedThisFrame && !jump)
         {
-            Die();
+            falling = true;
+            setAnimation("jump");
+            getAnimation().setFrame(1);
         }
+        else
+        {
+            falling = false;
+        }
+        collidedThisFrame = false;
     }
     public boolean getAlive() {return isAlive;}
 }
