@@ -6,9 +6,7 @@ import android.graphics.Rect;
 
 import java.util.HashMap;
 
-/**
- * Created by Dan on 24/02/2016.
- */
+
 public class Player extends GameObject {
     private static final float JUMP_VELOCITY = -15;
     private static final float VELOCITY_GRAVITY = 1.f;
@@ -18,24 +16,21 @@ public class Player extends GameObject {
     private static final long DEATH_TIME = 1500;
 
     private Bitmap spritesheet;
+    private HashMap<String, Animation> animations = new HashMap<>();
+    private String currentAnimation;
     private int score;
     private int moveSpeed;
     private float velocity;
     private boolean jump, slide, playing;
-    private HashMap<String, Animation> animations = new HashMap<String, Animation>();
-    private String currentAnimation;
     private Stopwatch slideRunTime = new Stopwatch();
-    //private Vector2f prev_pos;
     private boolean collidedThisFrame, falling;
     private Stopwatch timeDead = new Stopwatch();
-
     Rect colRect = new Rect();
     private boolean isAlive;
 
-    public Player(Bitmap res, Vector2f pos, int w, int h, int health)
+    public Player(Bitmap res, Vector2f pos, int w, int h)
     {
         this.pos = new Vector2f(pos);
-        //this.prev_pos = new Vector2f(pos);
         moveSpeed = MOVE_SPEED;
         height = Utils.pixToDip(h);
         width = Utils.pixToDip(w);
@@ -90,8 +85,6 @@ public class Player extends GameObject {
         {
             getAnimation().update();
 
-            //prev_pos.setEqual(pos);
-
             if(slide)
             {
                 if(slideRunTime.elapsed() > SLIDE_TIME)
@@ -103,11 +96,6 @@ public class Player extends GameObject {
 
         pos.x += moveSpeed;
         pos.y += GRAVITY;
-
-//        if(falling)
-//        {
-//            return;
-//        }
 
         if(jump)
         {
@@ -137,8 +125,7 @@ public class Player extends GameObject {
         GamePanel.Reset();
     }
 
-    private void stopJumping()
-    {
+    private void stopJumping() {
         jump = false;
         velocity = 0;
         setAnimation("run");
@@ -163,19 +150,16 @@ public class Player extends GameObject {
     {
         if(colRect.setIntersect(other.getColRect(), this.getColRect()) && isAlive)
         {
-            if(other.tag == "spike")
+            if(other.tag.equals("spike"))
             {
                 Die();
             }
-            else if (other.tag == "wall")
+            else if (other.tag.equals("wall"))
             {
                 collidedThisFrame = true;
 
                 if(jump || falling)
                     stopJumping();
-
-//                System.out.println("wall intersection:" + colRect.left + " " + colRect.top + " " + colRect.right
-//                                    + " " + colRect.bottom);
 
                 Rect playerRect = getColRect();
 
@@ -183,7 +167,7 @@ public class Player extends GameObject {
                 else if(colRect.top > playerRect.top)
                 {
                     int colRectHeight = colRect.bottom - colRect.top;
-//                    if(colRect.left == playerRect.left && colRect.right == playerRect.right)
+
                     if(colRectHeight < this.height / 2)
                     {
                         pos.y -= (colRect.bottom - colRect.top);//prev_pos.y;
@@ -192,8 +176,6 @@ public class Player extends GameObject {
                     {
                         Die();
                     }
-//                    if(!hitOnce) {hitOnce = true; return;}
-//                    else {pos.y -= (colRect.bottom - colRect.top); hitOnce = false;}
                 }
             }
         }
@@ -237,4 +219,22 @@ public class Player extends GameObject {
         collidedThisFrame = false;
     }
     public boolean getAlive() {return isAlive;}
+
+    public void pause()
+    {
+        setPlaying(false);
+        if(slide)
+        {
+            slideRunTime.pause();
+        }
+    }
+
+    public void resume()
+    {
+        setPlaying(true);
+        if(slide)
+        {
+            slideRunTime.resume();
+        }
+    }
 }

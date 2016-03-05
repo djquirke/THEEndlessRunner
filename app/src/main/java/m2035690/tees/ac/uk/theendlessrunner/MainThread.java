@@ -3,9 +3,6 @@ package m2035690.tees.ac.uk.theendlessrunner;
 import android.graphics.Canvas;
 import android.view.SurfaceHolder;
 
-/**
- * Created by Dan on 07/02/2016.
- */
 public class MainThread extends Thread
 {
     private final static int FPS = 60;
@@ -52,10 +49,7 @@ public class MainThread extends Thread
 
                     if(sleepTime > 0)
                     {
-                        try
-                        {
-                            this.sleep(sleepTime);
-                        }
+                        try {Thread.sleep(sleepTime);}
                         catch (InterruptedException e) {}
                     }
                 }

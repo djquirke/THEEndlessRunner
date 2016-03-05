@@ -6,6 +6,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -13,26 +17,38 @@ import android.view.SurfaceView;
 
 import java.util.Vector;
 
-/**
- * Created by Dan on 07/02/2016.
- */
-public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
+public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, SensorEventListener
 {
     private MainThread thread;
     public static float HEIGHT;
     public static float WIDTH;
     public static float DENSITY;
-    private static Player player;
+    private static int TILE_SIZE;
+
     public static Vector2f player_spawn;
     public static Vector2f camera_offset;
+    private static Player player;
     public static Camera camera;
-    private static Vector<GameObject> entities = new Vector<GameObject>();
-    private Vector2f downCoords, upCoords;
+    private Vector2f mapDims = new Vector2f();
+
+    private static Vector<GameObject> entities = new Vector<>();
+
+    //sliding/jumping
+    private Vector2f downCoords = new Vector2f(), upCoords = new Vector2f();
     private static float SWIPE_DISTANCE_THRESHOLD;
     private static final int SWIPE_TIME_THRESHOLD = 500;
-    private static int TILE_SIZE;
     private Stopwatch swipeTime = new Stopwatch();
-    private Map map = new Map();
+
+    //gyro scanning
+    private float gyroX, gyroY, gyroZ;
+    private boolean scanningEnv = false;
+    private Stopwatch scanningTime = new Stopwatch();
+    private static final int SCAN_ENV_TIME = 5000;
+
+    //double tap
+    private Stopwatch doubleTapTime = new Stopwatch();
+    private static final int DOUBLE_TAP_TIME_THRESHOLD = 250;
+    private boolean tappedOnce = false;
 
     public GamePanel(Context context)
     {
@@ -52,11 +68,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
         camera_offset = new Vector2f(WIDTH / 8, HEIGHT / 2);
         System.out.println(TILE_SIZE);
 
-        downCoords = new Vector2f();
-        upCoords = new Vector2f();
-
         //add the callback to the surfaceholder to intercept events
         getHolder().addCallback(this);
+
+        //setup sensors
+        SensorManager sm = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
+        Sensor gyro = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        sm.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME);
 
         thread = new MainThread(getHolder(), this);
 
@@ -67,10 +85,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     private void loadMap(String name)
     {
         Bitmap temp = BitmapFactory.decodeResource(getResources(), R.mipmap.map01);
-        map.setHeight(temp.getHeight() * TILE_SIZE);
-        map.setWidth(temp.getWidth() * TILE_SIZE);
-        camera.setMapHeight(map.getHeight());
-        camera.setMapWidth(map.getWidth());
+        mapDims.y = temp.getHeight() * TILE_SIZE;
+        mapDims.x = temp.getWidth() * TILE_SIZE;
+        camera.setMapSize(mapDims);
 
         Bitmap wall_img = BitmapFactory.decodeResource(getResources(), R.mipmap.wall);
         Bitmap wall_slide_img = BitmapFactory.decodeResource(getResources(), R.mipmap.wall_slide);
@@ -89,13 +106,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
 
                 if(r == 0 & g == 0 && b == 0) //BLACK = WALL
                 {
-//                    System.out.println("wall found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
                     Wall tempw = new Wall(wall_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE));
                     entities.add(tempw);
                 }
                 else if(r == 255 && g == 0 && b == 0) //RED = SPIKES
                 {
-//                    System.out.println("spike found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
                     Spike tempsp = new Spike(spike_img, new Vector2f(j * TILE_SIZE,
                                              i * TILE_SIZE + (TILE_SIZE - Utils.pixToDip(spike_img.getHeight()))));
 
@@ -104,8 +119,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
                 }
                 else if(r == 0 && g == 255 && b == 0) //GREEN = PLAYER SPAWN
                 {
-//                    System.out.println("player spawn found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
-                    player = new Player(player_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE), 230, 230, 100);
+                    player = new Player(player_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE), 230, 230);
                     player.addAnimation("run", 0, 0, 230, 230, 8, 80,
                             new Rect(Utils.pixToDip(55), 0, Utils.pixToDip(55), 0), true);
                     player.addAnimation("jump", 0, 230, 230, 230, 2, 10000,
@@ -174,34 +188,72 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
         switch(event.getAction())
         {
             case MotionEvent.ACTION_DOWN:
-                if(!player.getPlaying())
+                //start the game
+                if(!player.getPlaying() && !scanningEnv)
                 {
-                    player.setPlaying(true);
-                    break;
+                    player.resume();//.setPlaying(true);
+                    //break;
                 }
+
+                if(scanningEnv) stopScanning();
+
+                //for jumping/sliding
                 downCoords.x = Utils.pixToDip(event.getX());
                 downCoords.y = Utils.pixToDip(event.getY());
                 swipeTime.start();
+
+                //for starting gyroscope
+                startScanningCheck();
+
                 return true;
             case MotionEvent.ACTION_UP:
                 upCoords.x = Utils.pixToDip(event.getX());
                 upCoords.y = Utils.pixToDip(event.getY());
 
-                float xdif = upCoords.x - downCoords.x;
-                float ydif = upCoords.y - downCoords.y;
-
-                if(Math.abs(ydif) > Math.abs(xdif) &&
-                         Math.abs(ydif) > SWIPE_DISTANCE_THRESHOLD &&
-                         swipeTime.elapsed() < SWIPE_TIME_THRESHOLD)
-                {
-                    if(ydif < 0) player.Jump();
-                    else player.Slide();
-                }
+                checkJumpSlide();
 
                 return true;
         }
 
         return super.onTouchEvent(event);
+    }
+
+    private void checkJumpSlide()
+    {
+        float xdif = upCoords.x - downCoords.x;
+        float ydif = upCoords.y - downCoords.y;
+
+        if(Math.abs(ydif) > Math.abs(xdif) && Math.abs(ydif) > SWIPE_DISTANCE_THRESHOLD && swipeTime.elapsed() < SWIPE_TIME_THRESHOLD)
+        {
+            if(scanningEnv)
+            {
+                stopScanning();
+                tappedOnce = false;
+            }
+
+            if(ydif < 0) player.Jump();
+            else player.Slide();
+        }
+    }
+
+    private void startScanningCheck()
+    {
+        if(scanningEnv) return;
+
+        if(tappedOnce && doubleTapTime.elapsed() < DOUBLE_TAP_TIME_THRESHOLD && player.getAlive())
+        {
+            tappedOnce = false;
+            player.pause();
+            scanningEnv = true;
+            scanningTime.start();
+        }
+        else
+        {
+            tappedOnce = true;
+            scanningEnv = false;
+            doubleTapTime.start();
+        }
+
     }
 
     public void update()
@@ -217,6 +269,22 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
                 checkCollisions();
             }
         }
+        else if(scanningEnv)
+        {
+            if(scanningTime.elapsed() > SCAN_ENV_TIME)
+            {
+                stopScanning();
+            }
+
+            camera.Move(gyroX * -25.f, gyroY * 25);
+        }
+    }
+
+    private void stopScanning()
+    {
+        scanningEnv = false;
+        camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
+        player.resume();
     }
 
     @Override
@@ -224,15 +292,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
     {
         if(canvas != null)
         {
+            super.draw(canvas);
+
             canvas.drawColor(Color.YELLOW); //reset canvas to black
 
             for(GameObject obj : entities)
             {
                 obj.draw(canvas);
-                obj.drawDebug(canvas, Color.BLACK);
             }
 
-            player.drawDebug(canvas, Color.MAGENTA);
             player.draw(canvas);
         }
     }
@@ -244,18 +312,26 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback
             player.checkCollision(obj);
         }
 
-//        for(Wall wall : walls)
-//        {
-//            player.checkCollision(wall);
-//        }
-
         player.collisionCheckComplete();
     }
 
     public static void Reset()
     {
-        //entities.clear();
         player.setPos(player_spawn);
-        //TODO: reload level
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if(scanningEnv)
+        {
+            gyroX = sensorEvent.values[0];
+            gyroY = sensorEvent.values[1];
+        }
+        gyroZ = sensorEvent.values[2];
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
     }
 }

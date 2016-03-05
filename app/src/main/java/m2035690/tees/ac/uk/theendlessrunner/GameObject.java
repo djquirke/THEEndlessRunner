@@ -1,16 +1,11 @@
 package m2035690.tees.ac.uk.theendlessrunner;
 
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
-/**
- * Created by Dan on 24/02/2016.
- */
 public class GameObject {
     protected Vector2f pos;
-    protected float dx, dy;
     protected int width, height;
     protected Rect collisionRect = new Rect();
     protected String tag;

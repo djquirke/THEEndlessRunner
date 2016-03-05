@@ -3,9 +3,7 @@ package m2035690.tees.ac.uk.theendlessrunner;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
-/**
- * Created by Dan on 27/02/2016.
- */
+
 public class Spike extends GameObject {
     Bitmap image;
 

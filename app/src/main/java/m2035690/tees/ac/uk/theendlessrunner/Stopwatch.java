@@ -1,10 +1,8 @@
 package m2035690.tees.ac.uk.theendlessrunner;
 
-/**
- * Created by Dan on 27/02/2016.
- */
 public class Stopwatch {
     private long startTime = 0;
+    private long pauseTime = 0;
 
     public Stopwatch() {}
 
@@ -17,5 +15,17 @@ public class Stopwatch {
     {
         long time = System.currentTimeMillis();
         return time - startTime;
+    }
+
+    public void pause()
+    {
+        pauseTime = System.currentTimeMillis();
+    }
+
+    public void resume()
+    {
+        long time = System.currentTimeMillis();
+        long pauseLength = time - pauseTime;
+        startTime += pauseLength;
     }
 }
