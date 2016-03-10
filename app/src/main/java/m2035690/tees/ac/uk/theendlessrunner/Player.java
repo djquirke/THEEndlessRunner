@@ -16,7 +16,7 @@ public class Player extends GameObject {
     private static final long DEATH_TIME = 1500;
 
     private Bitmap spritesheet;
-    private HashMap<String, Animation> animations = new HashMap<>();
+    private HashMap<String, Animation> animations = new HashMap<String, Animation>();
     private String currentAnimation;
     private int score;
     private int moveSpeed;

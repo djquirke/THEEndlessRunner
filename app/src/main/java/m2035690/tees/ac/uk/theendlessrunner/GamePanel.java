@@ -31,7 +31,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     public static Camera camera;
     private Vector2f mapDims = new Vector2f();
 
-    private static Vector<GameObject> entities = new Vector<>();
+    private static Vector<GameObject> entities = new Vector<GameObject>();
 
     //sliding/jumping
     private Vector2f downCoords = new Vector2f(), upCoords = new Vector2f();
@@ -43,7 +43,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     private float gyroX, gyroY, gyroZ;
     private boolean scanningEnv = false;
     private Stopwatch scanningTime = new Stopwatch();
-    private static final int SCAN_ENV_TIME = 5000;
+    private static final int SCAN_ENV_TIME = 50000;
 
     //double tap
     private Stopwatch doubleTapTime = new Stopwatch();
@@ -93,6 +93,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         Bitmap wall_slide_img = BitmapFactory.decodeResource(getResources(), R.mipmap.wall_slide);
         Bitmap spike_img = BitmapFactory.decodeResource(getResources(), R.mipmap.spike);
         Bitmap player_img = BitmapFactory.decodeResource(getResources(), R.mipmap.characters);
+        Bitmap coin_img = BitmapFactory.decodeResource(getResources(), R.mipmap.coin);
 
         for(int i = 0; i < temp.getHeight(); i++)
         {
@@ -137,6 +138,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 //                    System.out.println("wall slide found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
                     Wall tempw = new Wall(wall_slide_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE));
                     entities.add(tempw);
+                }
+                else if(r == 255 && g == 255 && b == 0)
+                {
+                    Coin tempc = new Coin(coin_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE), Utils.pixToDip(coin_img.getWidth() / 10),
+                                          Utils.pixToDip(coin_img.getHeight()));
+                    tempc.addAnimation(coin_img.getWidth() / 10, coin_img.getHeight(), 10, 100);
+                    tempc.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+                    entities.add(tempc);
                 }
             }
         }
@@ -278,6 +287,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
             camera.Move(gyroX * -25.f, gyroY * 25);
         }
+
+        for(GameObject obj : entities)
+        {
+            obj.update();
+        }
     }
 
     private void stopScanning()
@@ -299,6 +313,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
             for(GameObject obj : entities)
             {
                 obj.draw(canvas);
+                obj.drawDebug(canvas, Color.RED);
             }
 
             player.draw(canvas);
