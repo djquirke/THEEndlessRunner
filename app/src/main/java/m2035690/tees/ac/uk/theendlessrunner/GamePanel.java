@@ -30,8 +30,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     private static Player player;
     public static Camera camera;
     private Vector2f mapDims = new Vector2f();
+    private static int num_coins = 0;
 
     private static Vector<GameObject> entities = new Vector<GameObject>();
+    private static Vector<GameObject> coins = new Vector<GameObject>();
 
     //sliding/jumping
     private Vector2f downCoords = new Vector2f(), upCoords = new Vector2f();
@@ -146,6 +148,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                     tempc.addAnimation(coin_img.getWidth() / 10, coin_img.getHeight(), 10, 100);
                     tempc.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
                     entities.add(tempc);
+
                 }
             }
         }
@@ -262,7 +265,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
             scanningEnv = false;
             doubleTapTime.start();
         }
-
     }
 
     public void update()
@@ -290,7 +292,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
         for(GameObject obj : entities)
         {
-            obj.update();
+            if(obj.isAlive())
+                obj.update();
         }
     }
 
@@ -312,8 +315,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
             for(GameObject obj : entities)
             {
-                obj.draw(canvas);
-                obj.drawDebug(canvas, Color.RED);
+                if(obj.isAlive())
+                {
+                    obj.draw(canvas);
+                    obj.drawDebug(canvas, Color.RED);
+                }
             }
 
             player.draw(canvas);
@@ -324,7 +330,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     {
         for(GameObject obj : entities)
         {
-            player.checkCollision(obj);
+            if(obj.isAlive())
+                player.checkCollision(obj);
         }
 
         player.collisionCheckComplete();
@@ -333,6 +340,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     public static void Reset()
     {
         player.setPos(player_spawn);
+        for(GameObject obj : entities)
+        {
+            if(!obj.isAlive() && obj.tag.equals("coin"))
+                obj.setAlive(true);
+        }
+        num_coins = 0;
     }
 
     @Override
@@ -348,5 +361,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
+    }
+
+    public static void incrementCoins()
+    {
+        num_coins++;
+        System.out.println(num_coins);
     }
 }

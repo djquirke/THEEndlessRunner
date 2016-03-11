@@ -178,6 +178,11 @@ public class Player extends GameObject {
                     }
                 }
             }
+            else if(other.tag.equals("coin"))
+            {
+                GamePanel.incrementCoins();
+                other.setAlive(false);
+            }
         }
     }
 

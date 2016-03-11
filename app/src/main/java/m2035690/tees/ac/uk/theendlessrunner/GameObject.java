@@ -9,6 +9,7 @@ public class GameObject {
     protected int width, height;
     protected Rect collisionRect = new Rect();
     protected String tag;
+    protected boolean isAlive = true;
 
     public void setX(int x) {this.pos.x = x;}
     public void setY(int y) {this.pos.y = y;}
@@ -19,6 +20,8 @@ public class GameObject {
     public Vector2f getPos() {return pos;}
     public int getWidth() {return width;}
     public int getHeight() {return height;}
+    public boolean isAlive() {return isAlive;}
+    public void setAlive(boolean value) {isAlive = value;}
 
     public Rect getRect()
     {
@@ -54,5 +57,15 @@ public class GameObject {
         canvas.drawRect(Utils.dipToPix(getColRect().left - campos.x), Utils.dipToPix(getColRect().top - campos.y),
                 Utils.dipToPix(getColRect().right - campos.x), Utils.dipToPix(getColRect().bottom - campos.y),
                 p);
+    }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        boolean ret = false;
+
+        GameObject obj = (GameObject) other;
+
+        return (this.tag.equals(obj.tag) && this.pos == obj.pos);
     }
 }

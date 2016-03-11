@@ -19,9 +19,7 @@ public class Coin extends GameObject {
     }
 
     @Override
-    public void update() {
-        animation.update();
-    }
+    public void update() {animation.update();}
 
     @Override
     public void draw(Canvas canvas)
