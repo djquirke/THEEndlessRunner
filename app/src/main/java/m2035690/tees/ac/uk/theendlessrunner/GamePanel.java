@@ -32,8 +32,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     private Vector2f mapDims = new Vector2f();
     private static int num_coins = 0;
 
-    private static Vector<GameObject> entities = new Vector<GameObject>();
-    private static Vector<GameObject> coins = new Vector<GameObject>();
+    private static Vector<GameObject> entities = new Vector<>();
+    private static Vector<GameObject> coins = new Vector<>();
 
     //sliding/jumping
     private Vector2f downCoords = new Vector2f(), upCoords = new Vector2f();
@@ -68,7 +68,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
         camera = new Camera(0, 0, (int)WIDTH, (int)HEIGHT);
         camera_offset = new Vector2f(WIDTH / 8, HEIGHT / 2);
-        System.out.println(TILE_SIZE);
+        //System.out.println(TILE_SIZE);
 
         //add the callback to the surfaceholder to intercept events
         getHolder().addCallback(this);
@@ -143,11 +143,22 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                 }
                 else if(r == 255 && g == 255 && b == 0)
                 {
-                    Coin tempc = new Coin(coin_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE), Utils.pixToDip(coin_img.getWidth() / 10),
-                                          Utils.pixToDip(coin_img.getHeight()));
-                    tempc.addAnimation(coin_img.getWidth() / 10, coin_img.getHeight(), 10, 100);
-                    tempc.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
-                    entities.add(tempc);
+                    int coin_frames = 10;
+                    int coin_w = coin_img.getWidth() / coin_frames;
+                    Coin tempc1 = new Coin(coin_img, new Vector2f(j * TILE_SIZE,
+                            i * TILE_SIZE + (0.5f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc1.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc1.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    Coin tempc2 = new Coin(coin_img, new Vector2f(j * TILE_SIZE + Utils.pixToDip(1.25f * coin_w),
+                            i * TILE_SIZE + (0.5f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc2.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc2.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    entities.add(tempc1);
+                    entities.add(tempc2);
 
                 }
             }
@@ -318,7 +329,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                 if(obj.isAlive())
                 {
                     obj.draw(canvas);
-                    obj.drawDebug(canvas, Color.RED);
+                    //obj.drawDebug(canvas, Color.RED);
                 }
             }
 
@@ -365,7 +376,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
     public static void incrementCoins()
     {
-        num_coins++;
+        num_coins += 10;
         System.out.println(num_coins);
     }
 }
