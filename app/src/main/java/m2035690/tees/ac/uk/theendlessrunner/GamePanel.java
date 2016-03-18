@@ -146,21 +146,54 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                     int coin_frames = 10;
                     int coin_w = coin_img.getWidth() / coin_frames;
                     Coin tempc1 = new Coin(coin_img, new Vector2f(j * TILE_SIZE,
-                            i * TILE_SIZE + (0.5f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            i * TILE_SIZE + (0.75f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
                             Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
                     tempc1.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
                     tempc1.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
 
                     Coin tempc2 = new Coin(coin_img, new Vector2f(j * TILE_SIZE + Utils.pixToDip(1.25f * coin_w),
-                            i * TILE_SIZE + (0.5f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            i * TILE_SIZE + (0.75f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
                             Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
                     tempc2.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
                     tempc2.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
 
                     entities.add(tempc1);
                     entities.add(tempc2);
-
                 }
+                else if(r == 200 && g == 200 && b == 0)
+                {
+                    int coin_frames = 10;
+                    int coin_w = coin_img.getWidth() / coin_frames;
+                    Coin tempc1 = new Coin(coin_img, new Vector2f(j * TILE_SIZE,
+                            i * TILE_SIZE + (0.25f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc1.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc1.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    Coin tempc2 = new Coin(coin_img, new Vector2f(j * TILE_SIZE + Utils.pixToDip(1.25f * coin_w),
+                            i * TILE_SIZE + (0.25f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc2.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc2.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    Coin tempc3 = new Coin(coin_img, new Vector2f(j * TILE_SIZE,
+                            i * TILE_SIZE + (0.75f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc3.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc3.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    Coin tempc4 = new Coin(coin_img, new Vector2f(j * TILE_SIZE + Utils.pixToDip(1.25f * coin_w),
+                            i * TILE_SIZE + (0.75f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc4.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc4.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    entities.add(tempc1);
+                    entities.add(tempc2);
+                    entities.add(tempc3);
+                    entities.add(tempc4);
+                }
+
             }
         }
     }
