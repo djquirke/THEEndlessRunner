@@ -77,4 +77,11 @@ public class Vector2f {
         this.x = other.x;
         this.y = other.y;
     }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        Vector2f obj = (Vector2f)other;
+        return (this.x == obj.x && this.y == obj.y);
+    }
 }

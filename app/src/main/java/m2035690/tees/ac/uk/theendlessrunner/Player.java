@@ -16,7 +16,7 @@ public class Player extends GameObject {
     private static final long DEATH_TIME = 1500;
 
     private Bitmap spritesheet;
-    private HashMap<String, Animation> animations = new HashMap<>();
+    private HashMap<String, Animation> animations = new HashMap<String, Animation>();
     private String currentAnimation;
     private int score;
     private int moveSpeed;
@@ -178,9 +178,16 @@ public class Player extends GameObject {
                     }
                 }
             }
+<<<<<<< HEAD
             else if(other.tag.equals("prog_door"))
             {
                 System.out.println("hit end door");
+=======
+            else if(other.tag.equals("coin"))
+            {
+                GamePanel.incrementCoins();
+                other.setAlive(false);
+>>>>>>> origin/master
             }
         }
     }

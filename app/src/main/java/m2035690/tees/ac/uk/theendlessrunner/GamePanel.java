@@ -30,8 +30,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     private static Player player;
     public static Camera camera;
     private Vector2f mapDims = new Vector2f();
+    private static int num_coins = 0;
 
     private static Vector<GameObject> entities = new Vector<>();
+    private static Vector<GameObject> coins = new Vector<>();
 
     //sliding/jumping
     private Vector2f downCoords = new Vector2f(), upCoords = new Vector2f();
@@ -43,7 +45,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     private float gyroX, gyroY, gyroZ;
     private boolean scanningEnv = false;
     private Stopwatch scanningTime = new Stopwatch();
-    private static final int SCAN_ENV_TIME = 5000;
+    private static final int SCAN_ENV_TIME = 50000;
 
     //double tap
     private Stopwatch doubleTapTime = new Stopwatch();
@@ -66,7 +68,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
         camera = new Camera(0, 0, (int)WIDTH, (int)HEIGHT);
         camera_offset = new Vector2f(WIDTH / 8, HEIGHT / 2);
-        System.out.println(TILE_SIZE);
+        //System.out.println(TILE_SIZE);
 
         //add the callback to the surfaceholder to intercept events
         getHolder().addCallback(this);
@@ -93,7 +95,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         Bitmap wall_slide_img = BitmapFactory.decodeResource(getResources(), R.mipmap.wall_slide);
         Bitmap spike_img = BitmapFactory.decodeResource(getResources(), R.mipmap.spike);
         Bitmap player_img = BitmapFactory.decodeResource(getResources(), R.mipmap.characters);
+<<<<<<< HEAD
         Bitmap door_img = BitmapFactory.decodeResource(getResources(), R.mipmap.doorexit);
+=======
+        Bitmap coin_img = BitmapFactory.decodeResource(getResources(), R.mipmap.coin);
+>>>>>>> origin/master
 
         for(int i = 0; i < temp.getHeight(); i++)
         {
@@ -139,11 +145,67 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                     Wall tempw = new Wall(wall_slide_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE));
                     entities.add(tempw);
                 }
+<<<<<<< HEAD
                 else if(r == 255 && g == 165 && b == 0) //= END DOOR
                 {
                     ProgressionDoor temp_pd = new ProgressionDoor(door_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE));
                     entities.add(temp_pd);
                 }
+=======
+                else if(r == 255 && g == 255 && b == 0)
+                {
+                    int coin_frames = 10;
+                    int coin_w = coin_img.getWidth() / coin_frames;
+                    Coin tempc1 = new Coin(coin_img, new Vector2f(j * TILE_SIZE,
+                            i * TILE_SIZE + (0.75f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc1.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc1.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    Coin tempc2 = new Coin(coin_img, new Vector2f(j * TILE_SIZE + Utils.pixToDip(1.25f * coin_w),
+                            i * TILE_SIZE + (0.75f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc2.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc2.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    entities.add(tempc1);
+                    entities.add(tempc2);
+                }
+                else if(r == 200 && g == 200 && b == 0)
+                {
+                    int coin_frames = 10;
+                    int coin_w = coin_img.getWidth() / coin_frames;
+                    Coin tempc1 = new Coin(coin_img, new Vector2f(j * TILE_SIZE,
+                            i * TILE_SIZE + (0.25f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc1.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc1.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    Coin tempc2 = new Coin(coin_img, new Vector2f(j * TILE_SIZE + Utils.pixToDip(1.25f * coin_w),
+                            i * TILE_SIZE + (0.25f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc2.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc2.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    Coin tempc3 = new Coin(coin_img, new Vector2f(j * TILE_SIZE,
+                            i * TILE_SIZE + (0.75f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc3.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc3.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    Coin tempc4 = new Coin(coin_img, new Vector2f(j * TILE_SIZE + Utils.pixToDip(1.25f * coin_w),
+                            i * TILE_SIZE + (0.75f * TILE_SIZE - Utils.pixToDip(0.5f * coin_img.getHeight()))),
+                            Utils.pixToDip(coin_img.getWidth() / 10), Utils.pixToDip(coin_img.getHeight()));
+                    tempc4.addAnimation(coin_w, coin_img.getHeight(), coin_frames, 80);
+                    tempc4.setColRect(Utils.pixToDip(20), 0, Utils.pixToDip(10), 0);
+
+                    entities.add(tempc1);
+                    entities.add(tempc2);
+                    entities.add(tempc3);
+                    entities.add(tempc4);
+                }
+
+>>>>>>> origin/master
             }
         }
     }
@@ -259,7 +321,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
             scanningEnv = false;
             doubleTapTime.start();
         }
-
     }
 
     public void update()
@@ -284,6 +345,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
             camera.Move(gyroX * -25.f, gyroY * 25);
         }
+
+        for(GameObject obj : entities)
+        {
+            if(obj.isAlive())
+                obj.update();
+        }
     }
 
     private void stopScanning()
@@ -304,8 +371,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
             for(GameObject obj : entities)
             {
+<<<<<<< HEAD
                 obj.draw(canvas);
                 obj.drawDebug(canvas, Color.RED);
+=======
+                if(obj.isAlive())
+                {
+                    obj.draw(canvas);
+                    //obj.drawDebug(canvas, Color.RED);
+                }
+>>>>>>> origin/master
             }
 
             player.draw(canvas);
@@ -316,7 +391,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     {
         for(GameObject obj : entities)
         {
-            player.checkCollision(obj);
+            if(obj.isAlive())
+                player.checkCollision(obj);
         }
 
         player.collisionCheckComplete();
@@ -325,6 +401,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     public static void Reset()
     {
         player.setPos(player_spawn);
+        for(GameObject obj : entities)
+        {
+            if(!obj.isAlive() && obj.tag.equals("coin"))
+                obj.setAlive(true);
+        }
+        num_coins = 0;
     }
 
     @Override
@@ -340,5 +422,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
+    }
+
+    public static void incrementCoins()
+    {
+        num_coins += 10;
+        System.out.println(num_coins);
     }
 }
