@@ -93,6 +93,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         Bitmap wall_slide_img = BitmapFactory.decodeResource(getResources(), R.mipmap.wall_slide);
         Bitmap spike_img = BitmapFactory.decodeResource(getResources(), R.mipmap.spike);
         Bitmap player_img = BitmapFactory.decodeResource(getResources(), R.mipmap.characters);
+        Bitmap door_img = BitmapFactory.decodeResource(getResources(), R.mipmap.doorexit);
 
         for(int i = 0; i < temp.getHeight(); i++)
         {
@@ -137,6 +138,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 //                    System.out.println("wall slide found, drawing at:" + j * TILE_SIZE + " " + i * TILE_SIZE);
                     Wall tempw = new Wall(wall_slide_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE));
                     entities.add(tempw);
+                }
+                else if(r == 255 && g == 165 && b == 0) //= END DOOR
+                {
+                    ProgressionDoor temp_pd = new ProgressionDoor(door_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE));
+                    entities.add(temp_pd);
                 }
             }
         }
@@ -299,6 +305,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
             for(GameObject obj : entities)
             {
                 obj.draw(canvas);
+                obj.drawDebug(canvas, Color.RED);
             }
 
             player.draw(canvas);

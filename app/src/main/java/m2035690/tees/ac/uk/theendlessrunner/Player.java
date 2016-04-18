@@ -178,6 +178,10 @@ public class Player extends GameObject {
                     }
                 }
             }
+            else if(other.tag.equals("prog_door"))
+            {
+                System.out.println("hit end door");
+            }
         }
     }
 
