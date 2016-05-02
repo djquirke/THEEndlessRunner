@@ -48,6 +48,7 @@ public class GameObject {
 
     public void update() {}
     public void draw(Canvas canvas) {}
+    public void Reset() {}
     public void drawDebug(Canvas canvas, int colRectCol)
     {
         Vector2f campos = GamePanel.camera.getPos();
@@ -59,6 +60,7 @@ public class GameObject {
                 p);
     }
 
+
     @Override
     public boolean equals(Object other)
     {
@@ -67,5 +69,10 @@ public class GameObject {
         GameObject obj = (GameObject) other;
 
         return (this.tag.equals(obj.tag) && this.pos == obj.pos);
+    }
+
+    public void Destroy()
+    {
+
     }
 }

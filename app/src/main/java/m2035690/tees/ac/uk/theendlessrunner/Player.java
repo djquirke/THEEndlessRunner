@@ -28,6 +28,15 @@ public class Player extends GameObject {
     Rect colRect = new Rect();
     private boolean isAlive;
 
+    private boolean quit;
+
+    @Override
+    public void Destroy()
+    {
+        //if(!spritesheet.isRecycled())
+            spritesheet.recycle();
+    }
+
     public Player(Bitmap res, Vector2f pos, int w, int h)
     {
         this.pos = new Vector2f(pos);
@@ -39,6 +48,7 @@ public class Player extends GameObject {
         collidedThisFrame = false;
         falling = false;
         isAlive = true;
+        quit = false;
     }
 
     public void addAnimation(String name, int xpos, int ypos, int frame_w, int frame_h, int numFrames, int delay, Rect colRect, boolean setActive)
@@ -178,16 +188,16 @@ public class Player extends GameObject {
                     }
                 }
             }
-<<<<<<< HEAD
             else if(other.tag.equals("prog_door"))
             {
-                System.out.println("hit end door");
-=======
+                quit = true;
+                //GamePanel.Quit();
+                //System.out.println("hit end door");
+            }
             else if(other.tag.equals("coin"))
             {
                 GamePanel.incrementCoins();
                 other.setAlive(false);
->>>>>>> origin/master
             }
         }
     }
@@ -248,4 +258,6 @@ public class Player extends GameObject {
             slideRunTime.resume();
         }
     }
+
+    public boolean isQuit() {return quit;}
 }

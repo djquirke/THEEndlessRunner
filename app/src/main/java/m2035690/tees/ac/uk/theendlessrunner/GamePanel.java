@@ -1,5 +1,6 @@
 package m2035690.tees.ac.uk.theendlessrunner;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,6 +16,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.Timer;
 import java.util.Vector;
 
 public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, SensorEventListener
@@ -29,8 +31,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     public static Vector2f camera_offset;
     private static Player player;
     public static Camera camera;
-    private Vector2f mapDims = new Vector2f();
     private static int num_coins = 0;
+    private Vector2f mapDims = new Vector2f();
 
     private static Vector<GameObject> entities = new Vector<>();
     private static Vector<GameObject> coins = new Vector<>();
@@ -43,20 +45,36 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
     //gyro scanning
     private float gyroX, gyroY, gyroZ;
-    private boolean scanningEnv = false;
+    //private boolean scanningEnv = false;
     private Stopwatch scanningTime = new Stopwatch();
-    private static final int SCAN_ENV_TIME = 50000;
+    private static final int SCAN_ENV_TIME = 5000;
 
     //double tap
     private Stopwatch doubleTapTime = new Stopwatch();
     private static final int DOUBLE_TAP_TIME_THRESHOLD = 250;
     private boolean tappedOnce = false;
 
+    private Context m_context;
+
+   // private boolean transition_camera = false;
+    private Stopwatch camera_transition_step = new Stopwatch();
+    private Vector2f target_camera_pos = new Vector2f();
+    private Vector2f start_camera_pos = new Vector2f();
+   // private boolean cooldown = false;
+    private Stopwatch cooldown_timer = new Stopwatch();
+    private int time_to_cooldown;
+    private Bitmap gyro_scan_img;
+
+    private State game_state = State.NONE;
+
     public GamePanel(Context context)
     {
         super(context);
 
+        m_context = context;
+
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+
         DENSITY = displayMetrics.density;
         WIDTH = displayMetrics.widthPixels / DENSITY;
         HEIGHT = displayMetrics.heightPixels / DENSITY;
@@ -70,6 +88,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         camera_offset = new Vector2f(WIDTH / 8, HEIGHT / 2);
         //System.out.println(TILE_SIZE);
 
+        camera.InitialiseScanRect();
+        gyro_scan_img = BitmapFactory.decodeResource(getResources(), R.mipmap.gyroradius);
+        gyro_scan_img = Bitmap.createScaledBitmap(gyro_scan_img,
+                         Utils.dipToPix(camera.getScanRect().width() + 4),
+                        Utils.dipToPix(camera.getScanRect().height() + 4), false);
+
         //add the callback to the surfaceholder to intercept events
         getHolder().addCallback(this);
 
@@ -82,6 +106,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
         //make gamePanel focusable so it can handle events
         setFocusable(true);
+
     }
 
     private void loadMap(String name)
@@ -95,11 +120,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         Bitmap wall_slide_img = BitmapFactory.decodeResource(getResources(), R.mipmap.wall_slide);
         Bitmap spike_img = BitmapFactory.decodeResource(getResources(), R.mipmap.spike);
         Bitmap player_img = BitmapFactory.decodeResource(getResources(), R.mipmap.characters);
-<<<<<<< HEAD
         Bitmap door_img = BitmapFactory.decodeResource(getResources(), R.mipmap.doorexit);
-=======
         Bitmap coin_img = BitmapFactory.decodeResource(getResources(), R.mipmap.coin);
->>>>>>> origin/master
 
         for(int i = 0; i < temp.getHeight(); i++)
         {
@@ -145,13 +167,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                     Wall tempw = new Wall(wall_slide_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE));
                     entities.add(tempw);
                 }
-<<<<<<< HEAD
                 else if(r == 255 && g == 165 && b == 0) //= END DOOR
                 {
-                    ProgressionDoor temp_pd = new ProgressionDoor(door_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE));
+                    ProgressionDoor temp_pd = new ProgressionDoor(door_img, new Vector2f(j * TILE_SIZE, i * TILE_SIZE + Utils.pixToDip(72)));
                     entities.add(temp_pd);
                 }
-=======
                 else if(r == 255 && g == 255 && b == 0)
                 {
                     int coin_frames = 10;
@@ -204,10 +224,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                     entities.add(tempc3);
                     entities.add(tempc4);
                 }
-
->>>>>>> origin/master
             }
         }
+
     }
 
     @Override
@@ -219,7 +238,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     @Override
     public void surfaceDestroyed(SurfaceHolder holder)
     {
-        entities.clear();
+        Cleanup();
 
         boolean retry = true;
         int counter = 0;
@@ -248,22 +267,24 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         //safely start game loop
         thread.setRunning(true);
         thread.start();
+        game_state = State.PLAYING;
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
+        if(game_state.equals(State.LERP_CAMERA) || game_state.equals(State.COOLDOWN)) return false;
         switch(event.getAction())
         {
             case MotionEvent.ACTION_DOWN:
                 //start the game
-                if(!player.getPlaying() && !scanningEnv)
+                if(!player.getPlaying() && !game_state.equals(State.SCANNING_ENVIRONMENT))
                 {
                     player.resume();//.setPlaying(true);
                     //break;
                 }
 
-                if(scanningEnv) stopScanning();
+                if(game_state.equals(State.SCANNING_ENVIRONMENT)) stopScanning();
 
                 //for jumping/sliding
                 downCoords.x = Utils.pixToDip(event.getX());
@@ -293,7 +314,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
         if(Math.abs(ydif) > Math.abs(xdif) && Math.abs(ydif) > SWIPE_DISTANCE_THRESHOLD && swipeTime.elapsed() < SWIPE_TIME_THRESHOLD)
         {
-            if(scanningEnv)
+            if(game_state.equals(State.SCANNING_ENVIRONMENT))
             {
                 stopScanning();
                 tappedOnce = false;
@@ -306,46 +327,150 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
     private void startScanningCheck()
     {
-        if(scanningEnv) return;
+        if(game_state.equals(State.SCANNING_ENVIRONMENT)) return;
 
         if(tappedOnce && doubleTapTime.elapsed() < DOUBLE_TAP_TIME_THRESHOLD && player.getAlive())
         {
             tappedOnce = false;
             player.pause();
-            scanningEnv = true;
+            game_state = State.SCANNING_ENVIRONMENT;//scanningEnv = true;
+            //camera.setScanRect(player.getPos());
+//            int width = Utils.dipToPix(camera.getScanRect().width() + 10);
+//            int height = Utils.dipToPix(camera.getScanRect().height() + 10);
+//            if(gyro_scan_img.getWidth() != width || gyro_scan_img.getHeight() != height)
+//            {
+//                gyro_scan_img.recycle();
+//                gyro_scan_img = Bitmap.createScaledBitmap(gyro_scan_img,
+//                        Utils.dipToPix(camera.getScanRect().width() + 10),
+//                        Utils.dipToPix(camera.getScanRect().height() + 10), false);
+//            }
             scanningTime.start();
         }
         else
         {
             tappedOnce = true;
-            scanningEnv = false;
+//            if(game_state.equals(State.SCANNING_ENVIRONMENT))
+//                game_state = State.LERP_CAMERA;
+            //scanningEnv = false;
             doubleTapTime.start();
         }
     }
 
     public void update()
     {
-        if(player.getPlaying())
+        if(player.isQuit())
         {
-            player.update();
-
-            //check collisions
-            if(player.getAlive())
-            {
-                camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
-                checkCollisions();
-            }
-        }
-        else if(scanningEnv)
-        {
-            if(scanningTime.elapsed() > SCAN_ENV_TIME)
-            {
-                stopScanning();
-            }
-
-            camera.Move(gyroX * -25.f, gyroY * 25);
+            Cleanup();
+            ((Activity)m_context).finish();
         }
 
+        switch (game_state)
+        {
+            case NONE:
+                break;
+            case PLAYING:
+                if(player.getPlaying())
+                {
+                    player.update();
+
+                    //check collisions
+                    if(player.getAlive())
+                    {
+                        camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
+                        checkCollisions();
+                    }
+                }
+                break;
+            case SCANNING_ENVIRONMENT:
+                if(scanningTime.elapsed() > SCAN_ENV_TIME)
+                {
+                    stopScanning();
+                }
+                camera.startScanning(player.getPos());
+                camera.MoveScanning(gyroX * -25.f, gyroY * 25);
+                break;
+            case LERP_CAMERA:
+                if(!camera_transition_step.is_running)
+                {
+                    camera_transition_step.start();
+                }
+                else if(camera_transition_step.elapsed() > 1000)
+                {
+                    //if(!cooldown)
+                    Cooldown(1000);
+                    break;
+                    //transition_camera = false;
+                    //player.resume();
+                    //camera_transition_step.stop();
+                }
+                Vector2f new_cam_pos = lerp(start_camera_pos, target_camera_pos, camera_transition_step.elapsed() / 1000f);
+                camera.setCamera(new_cam_pos.x, new_cam_pos.y);
+                break;
+            case COOLDOWN:
+                if(cooldown_timer.elapsed() > time_to_cooldown)
+                {
+                    cooldown_timer.stop();
+                    game_state = State.PLAYING;
+//                    cooldown = false;
+//                    transition_camera = false;
+                    player.resume();
+                    camera_transition_step.stop();
+                }
+                break;
+        }
+//        if(player.getPlaying())
+//        {
+//            player.update();
+//
+//            //check collisions
+//            if(player.getAlive())
+//            {
+//                camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
+//                checkCollisions();
+//            }
+//        }
+//        else if(scanningEnv)
+//        {
+//            if(scanningTime.elapsed() > SCAN_ENV_TIME)
+//            {
+//                stopScanning();
+//            }
+//
+//            camera.MoveScanning(gyroX * -25.f, gyroY * 25);
+//            //camera.Move(gyroX * -25.f, gyroY * 25);
+//        }
+//        else if(!scanningEnv && transition_camera)
+//        {
+//            if(!camera_transition_step.is_running)
+//            {
+//                camera_transition_step.start();
+//            }
+//            else if(camera_transition_step.elapsed() > 1000)
+//            {
+//                if(!cooldown)
+//                    Cooldown(1000);
+//                //transition_camera = false;
+//                //player.resume();
+//                //camera_transition_step.stop();
+//            }
+//            if(cooldown)
+//            {
+//                if(cooldown_timer.elapsed() > time_to_cooldown)
+//                {
+//                    cooldown_timer.stop();
+//                    cooldown = false;
+//                    transition_camera = false;
+//                    player.resume();
+//                    camera_transition_step.stop();
+//                }
+//            }
+//            else
+//            {
+//                Vector2f new_cam_pos = lerp(start_camera_pos, target_camera_pos, camera_transition_step.elapsed() / 1000f);
+//                camera.setCamera(new_cam_pos.x, new_cam_pos.y);
+//            }
+//        }
+//
         for(GameObject obj : entities)
         {
             if(obj.isAlive())
@@ -353,11 +478,45 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         }
     }
 
+    private void Cleanup()
+    {
+
+
+
+        for(GameObject obj : entities)
+        {
+            System.out.println("DESTROY THE WORLD!!!!!!!!");
+            obj.Destroy();
+        }
+
+        gyro_scan_img.recycle();
+        entities.clear();
+
+    }
+
+    private void Cooldown(int time)
+    {
+        time_to_cooldown = time;
+        cooldown_timer.start();
+        game_state = State.COOLDOWN;
+       // cooldown = true;
+    }
+
+    private Vector2f lerp(Vector2f start, Vector2f goal, float step)
+    {
+        Vector2f ret = start.Add((goal.Subtract(start).Multiply(step)));
+        return ret;
+    }
+
     private void stopScanning()
     {
-        scanningEnv = false;
-        camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
-        player.resume();
+        game_state = State.LERP_CAMERA;
+        //scanningEnv = false;
+        //transition_camera = true;
+        target_camera_pos = new Vector2f(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
+        start_camera_pos.setEqual(camera.getPos());
+        //camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
+        //player.resume();
     }
 
     @Override
@@ -367,20 +526,21 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         {
             super.draw(canvas);
 
-            canvas.drawColor(Color.YELLOW); //reset canvas to black
+            canvas.drawColor(Color.YELLOW); //reset canvas to yellow
 
             for(GameObject obj : entities)
             {
-<<<<<<< HEAD
-                obj.draw(canvas);
-                obj.drawDebug(canvas, Color.RED);
-=======
                 if(obj.isAlive())
                 {
                     obj.draw(canvas);
                     //obj.drawDebug(canvas, Color.RED);
                 }
->>>>>>> origin/master
+            }
+
+            if(game_state.equals(State.LERP_CAMERA) || game_state.equals(State.SCANNING_ENVIRONMENT))
+            {
+                canvas.drawBitmap(gyro_scan_img, Utils.dipToPix(camera.getScanRect().left - camera.getPos().x - 2),
+                        Utils.dipToPix(camera.getScanRect().top - camera.getPos().y - 2), null);
             }
 
             player.draw(canvas);
@@ -403,15 +563,18 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         player.setPos(player_spawn);
         for(GameObject obj : entities)
         {
-            if(!obj.isAlive() && obj.tag.equals("coin"))
+            if(obj.tag.equals("coin"))
+            {
                 obj.setAlive(true);
+                obj.Reset();
+            }
         }
         num_coins = 0;
     }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if(scanningEnv)
+        if(game_state.equals(State.SCANNING_ENVIRONMENT))
         {
             gyroX = sensorEvent.values[0];
             gyroY = sensorEvent.values[1];

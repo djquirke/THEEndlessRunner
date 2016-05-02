@@ -19,6 +19,14 @@ public class Coin extends GameObject {
     }
 
     @Override
+    public void Destroy()
+    {
+        //if(!spritesheet.isRecycled())
+            spritesheet.recycle();
+    }
+
+
+    @Override
     public void update() {animation.update();}
 
     @Override
@@ -31,6 +39,9 @@ public class Coin extends GameObject {
                     Utils.dipToPix(pos.y - campos.y), null);
         }
     }
+
+    @Override
+    public void Reset() {animation.setFrame(0);}
 
     public void addAnimation(int frame_w, int frame_h, int numFrames, int delay)
     {

@@ -6,6 +6,15 @@ import android.graphics.Canvas;
 public class Wall extends GameObject {
     Bitmap image;
 
+    @Override
+    public void Destroy()
+    {
+        //if(!image.isRecycled()) {
+            image.recycle();
+            System.out.println("YOU GO GIRL!");
+       // }
+    }
+
     public Wall(Bitmap image, Vector2f pos)
     {
         this.image = image;

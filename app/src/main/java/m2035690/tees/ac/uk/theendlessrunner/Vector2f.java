@@ -39,6 +39,11 @@ public class Vector2f {
         return new Vector2f(this.x * other.x, this.y * other.y);
     }
 
+    public Vector2f Multiply(float other)
+    {
+        return new Vector2f(this.x * other, this.y * other);
+    }
+
     public Vector2f Divide(Vector2f other)
     {
         return new Vector2f(this.x / other.x, this.y / other.y);

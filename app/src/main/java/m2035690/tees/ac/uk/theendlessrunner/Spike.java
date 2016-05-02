@@ -7,6 +7,13 @@ import android.graphics.Canvas;
 public class Spike extends GameObject {
     Bitmap image;
 
+    @Override
+    public void Destroy()
+    {
+        //if(!image.isRecycled())
+            image.recycle();
+    }
+
     public Spike(Bitmap image, Vector2f pos)
     {
         this.image = image;
