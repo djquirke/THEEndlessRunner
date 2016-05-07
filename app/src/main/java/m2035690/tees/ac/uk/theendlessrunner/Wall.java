@@ -9,10 +9,7 @@ public class Wall extends GameObject {
     @Override
     public void Destroy()
     {
-        //if(!image.isRecycled()) {
-            image.recycle();
-            System.out.println("YOU GO GIRL!");
-       // }
+        image.recycle();
     }
 
     public Wall(Bitmap image, Vector2f pos)
@@ -27,7 +24,7 @@ public class Wall extends GameObject {
     @Override
     public void draw(Canvas canvas)
     {
-        if(this.getRect().intersect(GamePanel.camera.getRect()))
+        //if(this.getRect().intersect(GamePanel.camera.getRect()))
         {
             Vector2f campos = GamePanel.camera.getPos();
 

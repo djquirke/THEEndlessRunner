@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -35,7 +36,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     private Vector2f mapDims = new Vector2f();
 
     private static Vector<GameObject> entities = new Vector<>();
-    private static Vector<GameObject> coins = new Vector<>();
+//    private static Vector<GameObject> coins = new Vector<>();
 
     //sliding/jumping
     private Vector2f downCoords = new Vector2f(), upCoords = new Vector2f();
@@ -45,7 +46,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
     //gyro scanning
     private float gyroX, gyroY, gyroZ;
-    //private boolean scanningEnv = false;
     private Stopwatch scanningTime = new Stopwatch();
     private static final int SCAN_ENV_TIME = 5000;
 
@@ -56,16 +56,19 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
     private Context m_context;
 
-   // private boolean transition_camera = false;
     private Stopwatch camera_transition_step = new Stopwatch();
     private Vector2f target_camera_pos = new Vector2f();
     private Vector2f start_camera_pos = new Vector2f();
-   // private boolean cooldown = false;
     private Stopwatch cooldown_timer = new Stopwatch();
     private int time_to_cooldown;
     private Bitmap gyro_scan_img;
 
     private State game_state = State.NONE;
+    private float prev_accelX, prev_accelY, prev_accelZ;
+    private float new_accelX, new_accelY, new_accelZ;
+    private static float ACCELEROMETER_THRESHOLD = 1.0f;
+    private float angle = 0;
+    private float prev_angle = 0;
 
     public GamePanel(Context context)
     {
@@ -101,6 +104,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         SensorManager sm = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
         Sensor gyro = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         sm.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME);
+        Sensor accel = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sm.registerListener(this, accel, SensorManager.SENSOR_DELAY_GAME);
 
         thread = new MainThread(getHolder(), this);
 
@@ -240,6 +245,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     {
         Cleanup();
 
+//        SensorManager sm = (SensorManager)m_context.getSystemService(Context.SENSOR_SERVICE);
+//        Sensor gyro = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+//        sm.unregisterListener(this, gyro);
+//        Sensor accel = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+//        sm.unregisterListener(this, accel);
+
         boolean retry = true;
         int counter = 0;
 
@@ -267,8 +278,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         //safely start game loop
         thread.setRunning(true);
         thread.start();
+      //  InitialiseAccelerometerValues();
         game_state = State.PLAYING;
     }
+
+//    private void InitialiseAccelerometerValues() {
+//        prev_accelX = new_accelX;
+//        prev_accelY = new_accelY;
+//        prev_accelZ = new_accelZ;
+//    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event)
@@ -379,6 +397,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                         camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
                         checkCollisions();
                     }
+
+
                 }
                 break;
             case SCANNING_ENVIRONMENT:
@@ -396,12 +416,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                 }
                 else if(camera_transition_step.elapsed() > 1000)
                 {
-                    //if(!cooldown)
                     Cooldown(1000);
                     break;
-                    //transition_camera = false;
-                    //player.resume();
-                    //camera_transition_step.stop();
                 }
                 Vector2f new_cam_pos = lerp(start_camera_pos, target_camera_pos, camera_transition_step.elapsed() / 1000f);
                 camera.setCamera(new_cam_pos.x, new_cam_pos.y);
@@ -411,66 +427,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                 {
                     cooldown_timer.stop();
                     game_state = State.PLAYING;
-//                    cooldown = false;
-//                    transition_camera = false;
                     player.resume();
                     camera_transition_step.stop();
                 }
                 break;
         }
-//        if(player.getPlaying())
-//        {
-//            player.update();
-//
-//            //check collisions
-//            if(player.getAlive())
-//            {
-//                camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
-//                checkCollisions();
-//            }
-//        }
-//        else if(scanningEnv)
-//        {
-//            if(scanningTime.elapsed() > SCAN_ENV_TIME)
-//            {
-//                stopScanning();
-//            }
-//
-//            camera.MoveScanning(gyroX * -25.f, gyroY * 25);
-//            //camera.Move(gyroX * -25.f, gyroY * 25);
-//        }
-//        else if(!scanningEnv && transition_camera)
-//        {
-//            if(!camera_transition_step.is_running)
-//            {
-//                camera_transition_step.start();
-//            }
-//            else if(camera_transition_step.elapsed() > 1000)
-//            {
-//                if(!cooldown)
-//                    Cooldown(1000);
-//                //transition_camera = false;
-//                //player.resume();
-//                //camera_transition_step.stop();
-//            }
-//            if(cooldown)
-//            {
-//                if(cooldown_timer.elapsed() > time_to_cooldown)
-//                {
-//                    cooldown_timer.stop();
-//                    cooldown = false;
-//                    transition_camera = false;
-//                    player.resume();
-//                    camera_transition_step.stop();
-//                }
-//            }
-//            else
-//            {
-//                Vector2f new_cam_pos = lerp(start_camera_pos, target_camera_pos, camera_transition_step.elapsed() / 1000f);
-//                camera.setCamera(new_cam_pos.x, new_cam_pos.y);
-//            }
-//        }
-//
+        //TODO: move me into playing state
+        CheckAccelerometerChanges();
         for(GameObject obj : entities)
         {
             if(obj.isAlive())
@@ -478,14 +441,61 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         }
     }
 
+    private void CheckAccelerometerChanges()
+    {
+        //if values uninitialised
+        if(prev_accelX == 0 && prev_accelY == 0 && prev_accelZ == 0)
+        {
+            prev_accelX = new_accelX;
+            prev_accelY = new_accelY;
+            prev_accelZ = new_accelZ;
+            return;
+        }
+
+        if((int)new_accelY == 0)
+        {
+            if((int)new_accelX > 0)
+            {
+                angle = 0;
+            }
+            else
+            {
+                angle = 180;
+            }
+        }
+        else if((int)new_accelX == 0)
+        {
+            if((int)new_accelY > 0)
+            {
+                angle = 270;
+            }
+            else
+            {
+                angle = 90;
+            }
+        }
+//        if(Math.abs(prev_accelY - new_accelY) > ACCELEROMETER_THRESHOLD)
+//        {
+//            System.out.println("TIME TO CHECK SOME ACCELEROMETER STUFF!");
+//
+//            //clockwise rotation, x decreasing
+//            if(prev_accelX > new_accelX)
+//            {
+//                //y increasing
+//                if(prev_accelY < new_accelY)
+//                {
+//                    angle = new_accelX * 10;
+//                }
+//            }
+//            prev_accelY = new_accelY;
+//            prev_accelX = new_accelX;
+//        }
+    }
+
     private void Cleanup()
     {
-
-
-
         for(GameObject obj : entities)
         {
-            System.out.println("DESTROY THE WORLD!!!!!!!!");
             obj.Destroy();
         }
 
@@ -525,6 +535,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         if(canvas != null)
         {
             super.draw(canvas);
+            canvas.rotate(angle, canvas.getWidth() / 2, canvas.getHeight() / 2);
+//canvas.getm
+            canvas.translate(Utils.dipToPix(100), 0);
+            //if angle has been changed, update camera
+            if(angle != prev_angle)
+            {
+                //camera.rotate(angle);
+                camera.setAngle(angle);
+                camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
+                prev_angle = angle;
+            }
 
             canvas.drawColor(Color.YELLOW); //reset canvas to yellow
 
@@ -544,6 +565,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
             }
 
             player.draw(canvas);
+
+            Paint p = new Paint();
+            p.setColor(Color.BLACK);
+            p.setTextSize(60);
+            canvas.drawText("X:" + new_accelX, 400, 350, p);
+            canvas.drawText("Y:" + new_accelY, 400, 200, p);
+            canvas.drawText("Z:" + new_accelZ, 400, 50, p);
+            //canvas.drawText("init values: " + prev_accelX + prev_accelY + prev_accelZ, 400, 500, p);
         }
     }
 
@@ -574,12 +603,40 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if(game_state.equals(State.SCANNING_ENVIRONMENT))
+        if(sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE && game_state.equals(State.SCANNING_ENVIRONMENT))
         {
             gyroX = sensorEvent.values[0];
             gyroY = sensorEvent.values[1];
+            gyroZ = sensorEvent.values[2];
         }
-        gyroZ = sensorEvent.values[2];
+        if(sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER && !game_state.equals(State.SCANNING_ENVIRONMENT))
+        {
+            new_accelX = sensorEvent.values[0];//(float)(Math.atan2(sensorEvent.values[1], sensorEvent.values[2]) * 180/Math.PI);//sensorEvent.values[0] * 90;
+            new_accelY = sensorEvent.values[1];
+            new_accelZ = sensorEvent.values[2];
+
+//            double accX = -sensorEvent.values[0]/SensorManager.GRAVITY_EARTH;
+//            double accY = -sensorEvent.values[1]/SensorManager.GRAVITY_EARTH;
+//            double accZ = sensorEvent.values[2]/SensorManager.GRAVITY_EARTH;
+//            double totAcc = Math.sqrt((accX * accX) + (accY * accY) + (accZ * accZ));
+//            accelX = (float)Math.asin(accX/totAcc);
+//            accelY = (float)Math.asin(accY/totAcc);
+//            accelZ = (float)Math.asin(accZ/totAcc);
+//            float[] g = new float[3];
+//            g = sensorEvent.values.clone();
+//
+//            float norm_Of_g = (float)Math.sqrt(g[0] * g[0] + g[1] * g[1] + g[2] * g[2]);
+//
+//// Normalize the accelerometer vector
+//            g[0] = g[0] / norm_Of_g;
+//            g[1] = g[1] / norm_Of_g;
+//            g[2] = g[2] / norm_Of_g;
+//
+//
+//            accelX = Math.round(Math.toDegrees(Math.acos(g[0])));//g[0];//sensorEvent.values[0];
+//            accelY = Math.round(Math.toDegrees(Math.acos(g[1])));//g[1];//sensorEvent.values[1];
+//            accelZ = Math.round(Math.toDegrees(Math.atan2(g[0], g[1])));//Math.round(Math.toDegrees(Math.acos(g[2])));//sensorEvent.values[2];
+        }//
     }
 
     @Override

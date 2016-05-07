@@ -25,7 +25,7 @@ public class ProgressionDoor extends GameObject {
     @Override
     public void draw(Canvas canvas)
     {
-        if(this.getRect().intersect(GamePanel.camera.getRect()))
+       // if(this.getRect().intersect(GamePanel.camera.getRect()))
         {
             Vector2f campos = GamePanel.camera.getPos();
 

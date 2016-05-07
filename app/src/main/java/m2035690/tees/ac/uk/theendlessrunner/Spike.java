@@ -26,7 +26,7 @@ public class Spike extends GameObject {
     @Override
     public void draw(Canvas canvas)
     {
-        if(this.getRect().intersect(GamePanel.camera.getRect()))
+        //if(this.getRect().intersect(GamePanel.camera.getRect()))
         {
             Vector2f campos = GamePanel.camera.getPos();
             canvas.drawBitmap(image, Utils.dipToPix(pos.x - campos.x),

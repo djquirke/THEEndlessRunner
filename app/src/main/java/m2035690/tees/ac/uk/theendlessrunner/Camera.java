@@ -10,6 +10,7 @@ public class Camera {
 
     public Vector2f getPos() {return pos;}
     public Rect getRect() {return rect;}
+    private float angle = 0;
 
     protected Camera(float x, float y, int width, int height)
     {
@@ -136,5 +137,63 @@ public class Camera {
         if(temp.right > map_width) {temp.left -= (temp.right - map_width); temp.right = map_width - 1;}
         if(temp.bottom > map_height) {temp.top -= (temp.bottom - map_height); temp.bottom = map_height - 1;}
         scan_rect.set(temp);
+    }
+
+    public void setAngle(float angle)
+    {
+        if(this.angle == angle || (this.angle + 180) == angle) return;
+        int temp_w = width;
+        width = height;
+        height = temp_w;
+
+        float tempX = rect.left - rect.centerX();
+        float tempY = rect.bottom - rect.centerY();
+
+        float dis_to_rotate = angle - this.angle;
+
+        double rotX = tempX * Math.cos(dis_to_rotate) - tempY * Math.sin(dis_to_rotate);
+        double rotY = tempX * Math.sin(dis_to_rotate) + tempY * Math.cos(dis_to_rotate);
+
+        float tempX2 = rect.right - rect.centerX();
+        float tempY2 = rect.top - rect.centerY();
+
+        double rotX2 = tempX2 * Math.cos(dis_to_rotate) - tempY2 * Math.sin(dis_to_rotate);
+        double rotY2 = tempX2 * Math.sin(dis_to_rotate) + tempY2 * Math.cos(dis_to_rotate);
+
+
+        rect.left = (int)rotX;
+        rect.top = (int)rotY;
+        rect.right = (int)rotX2;
+        rect.bottom = (int)rotY2;
+
+        this.angle = angle;
+    }
+
+    public void rotate(float angle)
+    {
+        System.out.println("RECTANGLE BEFORE ROTATION: " + rect);//.left + " " + rect.top + " " + rect.right + " " + rect.bottom);
+        if(Math.abs(angle - this.angle) % 180 == 0)
+        {
+            int temp_r = rect.right;
+            int temp_b = rect.bottom;
+            rect.right = rect.left;
+            rect.bottom = rect.top;
+            rect.left = temp_r;
+            rect.bottom = temp_b;
+        }
+        else
+        {
+            rect.left += ((width - height) / 2);
+            rect.top -= ((width - height) / 2);
+            rect.right -= ((width - height) / 2);
+            rect.bottom += ((width - height) / 2);
+
+            int temp_w = width;
+            width = height;
+            height = temp_w;
+        }
+        System.out.println("RECTANGLE AFTER ROTATION: " + rect);
+        this.angle = angle;
+
     }
 }
