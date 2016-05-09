@@ -2,6 +2,7 @@ package m2035690.tees.ac.uk.theendlessrunner;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 
 import java.util.HashMap;
@@ -107,6 +108,7 @@ public class Player extends GameObject {
         switch (GamePanel.orientation)
         {
             case LANDSCAPE:
+                rotation_angle = 0;
                 pos.x += moveSpeed;
                 pos.y += GRAVITY;
 
@@ -120,6 +122,7 @@ public class Player extends GameObject {
                 }
                 break;
             case REVERSE_LANDSCAPE:
+                rotation_angle = 180;
                 pos.x -= moveSpeed;
                 pos.y -= GRAVITY;
 
@@ -133,7 +136,7 @@ public class Player extends GameObject {
                 }
                 break;
             case PORTRAIT:
-                System.out.println("Orientation: reverse portrait");
+                rotation_angle = 90;
                 pos.x -= GRAVITY;
                 pos.y += moveSpeed;
 
@@ -147,7 +150,7 @@ public class Player extends GameObject {
                 }
                 break;
             case REVERSE_PORTRAIT:
-                System.out.println("Orientation: reverse portrait");
+                rotation_angle = 270;
                 pos.x += GRAVITY;
                 pos.y -= moveSpeed;
 
@@ -201,8 +204,28 @@ public class Player extends GameObject {
     {
         Vector2f campos = GamePanel.camera.getPos();
 
-        canvas.drawBitmap(getAnimation().getImage(), Utils.dipToPix(pos.x - campos.x),
-                Utils.dipToPix(pos.y - campos.y), null);
+        Matrix m = new Matrix();
+
+        switch (GamePanel.orientation)
+        {
+            case LANDSCAPE:
+                m.postRotate(0, getAnimation().getImage().getWidth() / 2, getAnimation().getImage().getHeight() / 2);
+
+                break;
+            case REVERSE_LANDSCAPE:
+                m.postRotate(180, getAnimation().getImage().getWidth() / 2, getAnimation().getImage().getHeight() / 2);
+                break;
+            case PORTRAIT:
+                m.postRotate(90, getAnimation().getImage().getWidth() / 2, getAnimation().getImage().getHeight() / 2);
+                break;
+            case REVERSE_PORTRAIT:
+                m.postRotate(270, getAnimation().getImage().getWidth() / 2, getAnimation().getImage().getHeight() / 2);
+                break;
+        }
+
+        m.postTranslate(Utils.dipToPix(pos.x - campos.x), Utils.dipToPix(pos.y - campos.y));
+
+        canvas.drawBitmap(getAnimation().getImage(), m, null);
     }
 
     public void checkCollision(GameObject other)
@@ -364,22 +387,4 @@ public class Player extends GameObject {
 
     public boolean isQuit() {return quit;}
 
-    public void offsetSlightly()
-    {
-        switch (GamePanel.orientation)
-        {
-            case LANDSCAPE:
-                pos.y -= 30;
-                break;
-            case REVERSE_LANDSCAPE:
-                pos.y += 30;
-                break;
-            case PORTRAIT:
-                pos.x -= 30;
-                break;
-            case REVERSE_PORTRAIT:
-                pos.x += 30;
-                break;
-        }
-    }
 }

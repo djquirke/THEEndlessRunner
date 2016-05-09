@@ -664,14 +664,32 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                         Utils.dipToPix(camera.getScanRect().top - camera.getPos().y - 2), null);
             }
 
+            //int state = canvas.save();
+//            canvas.rotate(0);
+//            switch (orientation)
+//            {
+//                case LANDSCAPE:
+//                    break;
+//                case REVERSE_LANDSCAPE:
+//                    canvas.rotate(180);
+//                    break;
+//                case PORTRAIT:
+//                    canvas.rotate(90);
+//                    break;
+//                case REVERSE_PORTRAIT:
+//                    canvas.rotate(270);
+//                    break;
+//            }
             player.draw(canvas);
+            player.drawDebug(canvas, Color.RED);
+           // canvas.restore();
 
-            Paint p = new Paint();
-            p.setColor(Color.BLACK);
-            p.setTextSize(60);
-            canvas.drawText("X:" + new_accelX, 400, 350, p);
-            canvas.drawText("Y:" + new_accelY, 400, 200, p);
-            canvas.drawText("Z:" + new_accelZ, 400, 50, p);
+//            Paint p = new Paint();
+//            p.setColor(Color.BLACK);
+//            p.setTextSize(60);
+//            canvas.drawText("X:" + new_accelX, 400, 350, p);
+//            canvas.drawText("Y:" + new_accelY, 400, 200, p);
+//            canvas.drawText("Z:" + new_accelZ, 400, 50, p);
             //canvas.drawText("init values: " + prev_accelX + prev_accelY + prev_accelZ, 400, 500, p);
         }
     }

@@ -1,8 +1,10 @@
 package m2035690.tees.ac.uk.theendlessrunner;
 
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 
 public class GameObject {
     protected Vector2f pos;
@@ -10,6 +12,7 @@ public class GameObject {
     protected Rect collisionRect = new Rect();
     protected String tag;
     protected boolean isAlive = true;
+    protected int rotation_angle = 0;
 
     public void setX(int x) {this.pos.x = x;}
     public void setY(int y) {this.pos.y = y;}
@@ -33,8 +36,19 @@ public class GameObject {
     public Rect getColRect()
     {
         Rect outer = getRect();
-        return new Rect(outer.left + collisionRect.left, outer.top + collisionRect.top,
-                        outer.right - collisionRect.right, outer.bottom - collisionRect.bottom);
+        Rect temp = new Rect(outer.left + collisionRect.left, outer.top + collisionRect.top,
+                             outer.right - collisionRect.right, outer.bottom - collisionRect.bottom);
+
+        if(rotation_angle == 0) return temp;
+
+        Matrix m = new Matrix();
+        m.setRotate(rotation_angle, temp.centerX(), temp.centerY());
+        RectF converted = new RectF(temp);
+        m.mapRect(converted);
+        temp.set((int)converted.left, (int)converted.top, (int)converted.right, (int)converted.bottom);
+
+        return temp;
+
     }
 
     public void setColRect(Rect rect) {collisionRect = rect;}
