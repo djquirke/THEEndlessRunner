@@ -104,17 +104,66 @@ public class Player extends GameObject {
             }
         }
 
-        pos.x += moveSpeed;
-        pos.y += GRAVITY;
-
-        if(jump)
+        switch (GamePanel.orientation)
         {
-            pos.y -= GRAVITY;
-            pos.y += velocity;
-            velocity += VELOCITY_GRAVITY;
+            case LANDSCAPE:
+                pos.x += moveSpeed;
+                pos.y += GRAVITY;
 
-            if(velocity >= 0) getAnimation().setFrame(1);
+                if(jump)
+                {
+                    pos.y -= GRAVITY;
+                    pos.y += velocity;
+                    velocity += VELOCITY_GRAVITY;
+
+                    if(velocity >= 0) getAnimation().setFrame(1);
+                }
+                break;
+            case REVERSE_LANDSCAPE:
+                pos.x -= moveSpeed;
+                pos.y -= GRAVITY;
+
+                if(jump)
+                {
+                    pos.y += GRAVITY;
+                    pos.y -= velocity;
+                    velocity += VELOCITY_GRAVITY;
+
+                    if(velocity >= 0) getAnimation().setFrame(1);
+                }
+                break;
+            case PORTRAIT:
+                System.out.println("Orientation: reverse portrait");
+                pos.x -= GRAVITY;
+                pos.y += moveSpeed;
+
+                if(jump)
+                {
+                    pos.x += GRAVITY;
+                    pos.x -= velocity;
+                    velocity += VELOCITY_GRAVITY;
+
+                    if(velocity >= 0) getAnimation().setFrame(1);
+                }
+                break;
+            case REVERSE_PORTRAIT:
+                System.out.println("Orientation: reverse portrait");
+                pos.x += GRAVITY;
+                pos.y -= moveSpeed;
+
+                if(jump)
+                {
+                    pos.x -= GRAVITY;
+                    pos.x += velocity;
+                    velocity += VELOCITY_GRAVITY;
+
+                    if(velocity >= 0) getAnimation().setFrame(1);
+                }
+                break;
         }
+
+
+
 
         if(!isAlive && timeDead.elapsed() > DEATH_TIME)
         {
@@ -173,20 +222,74 @@ public class Player extends GameObject {
 
                 Rect playerRect = getColRect();
 
-                if(colRect.top == playerRect.top) Die();
-                else if(colRect.top > playerRect.top)
+                switch (GamePanel.orientation)
                 {
-                    int colRectHeight = colRect.bottom - colRect.top;
+                    case LANDSCAPE:
+                        if(colRect.top == playerRect.top) Die(); //Headbutt
+                        else if(colRect.top > playerRect.top)
+                        {
+                            int colRectHeight = Math.abs(colRect.bottom - colRect.top);
 
-                    if(colRectHeight < this.height / 2)
-                    {
-                        pos.y -= (colRect.bottom - colRect.top);//prev_pos.y;
-                    }
-                    else
-                    {
-                        Die();
-                    }
+                            if(colRectHeight < this.height / 2)
+                            {
+                                pos.y -= colRectHeight;//prev_pos.y;
+                            }
+                            else
+                            {
+                                Die();
+                            }
+                        }
+                        break;
+                    case REVERSE_LANDSCAPE:
+                        if(colRect.bottom == playerRect.bottom) Die(); //Headbutt
+                        else if(colRect.bottom < playerRect.bottom)
+                        {
+                            int colRectHeight = Math.abs(colRect.bottom - colRect.top);
+
+                            if(colRectHeight < this.height / 2)
+                            {
+                                pos.y += colRectHeight;//prev_pos.y;
+                            }
+                            else
+                            {
+                                Die();
+                            }
+                        }
+                        break;
+                    case PORTRAIT:
+                        if(colRect.right == playerRect.right) Die(); //Headbutt
+                        else if(colRect.right < playerRect.right)
+                        {
+                            int colRectHeight = Math.abs(colRect.left - colRect.right);
+
+                            if(colRectHeight < this.width / 2)
+                            {
+                                pos.x += colRectHeight;//prev_pos.y;
+                            }
+                            else
+                            {
+                                Die();
+                            }
+                        }
+                        break;
+                    case REVERSE_PORTRAIT:
+                        if(colRect.left == playerRect.left) Die(); //Headbutt
+                        else if(colRect.left > playerRect.left)
+                        {
+                            int colRectHeight = Math.abs(colRect.left - colRect.right);
+
+                            if(colRectHeight < this.width / 2)
+                            {
+                                pos.x -= colRectHeight;//prev_pos.y;
+                            }
+                            else
+                            {
+                                Die();
+                            }
+                        }
+                        break;
                 }
+
             }
             else if(other.tag.equals("prog_door"))
             {
@@ -260,4 +363,23 @@ public class Player extends GameObject {
     }
 
     public boolean isQuit() {return quit;}
+
+    public void offsetSlightly()
+    {
+        switch (GamePanel.orientation)
+        {
+            case LANDSCAPE:
+                pos.y -= 30;
+                break;
+            case REVERSE_LANDSCAPE:
+                pos.y += 30;
+                break;
+            case PORTRAIT:
+                pos.x -= 30;
+                break;
+            case REVERSE_PORTRAIT:
+                pos.x += 30;
+                break;
+        }
+    }
 }

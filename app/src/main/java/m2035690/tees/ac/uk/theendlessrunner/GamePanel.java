@@ -30,6 +30,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
     public static Vector2f player_spawn;
     public static Vector2f camera_offset;
+    private float camera_translation_offset_y = 0;
     private static Player player;
     public static Camera camera;
     private static int num_coins = 0;
@@ -69,6 +70,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     private static float ACCELEROMETER_THRESHOLD = 1.0f;
     private float angle = 0;
     private float prev_angle = 0;
+    public static Orientation orientation = Orientation.LANDSCAPE;
+    private Stopwatch accelerometer_rotate_time = new Stopwatch();
+    private Orientation orientation_last_frame = Orientation.LANDSCAPE;
 
     public GamePanel(Context context)
     {
@@ -330,17 +334,63 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         float xdif = upCoords.x - downCoords.x;
         float ydif = upCoords.y - downCoords.y;
 
-        if(Math.abs(ydif) > Math.abs(xdif) && Math.abs(ydif) > SWIPE_DISTANCE_THRESHOLD && swipeTime.elapsed() < SWIPE_TIME_THRESHOLD)
+        switch (orientation)
         {
-            if(game_state.equals(State.SCANNING_ENVIRONMENT))
-            {
-                stopScanning();
-                tappedOnce = false;
-            }
+            case LANDSCAPE:
+                if(Math.abs(ydif) > Math.abs(xdif) && Math.abs(ydif) > SWIPE_DISTANCE_THRESHOLD && swipeTime.elapsed() < SWIPE_TIME_THRESHOLD)
+                {
+                    if(game_state.equals(State.SCANNING_ENVIRONMENT))
+                    {
+                        stopScanning();
+                        tappedOnce = false;
+                    }
 
-            if(ydif < 0) player.Jump();
-            else player.Slide();
+                    if(ydif < 0) player.Jump();
+                    else player.Slide();
+                }
+                break;
+            case REVERSE_LANDSCAPE:
+                if(Math.abs(ydif) > Math.abs(xdif) && Math.abs(ydif) > SWIPE_DISTANCE_THRESHOLD && swipeTime.elapsed() < SWIPE_TIME_THRESHOLD)
+                {
+                    if(game_state.equals(State.SCANNING_ENVIRONMENT))
+                    {
+                        stopScanning();
+                        tappedOnce = false;
+                    }
+
+                    if(ydif > 0) player.Jump();
+                    else player.Slide();
+                }
+                break;
+            case PORTRAIT:
+                if(Math.abs(xdif) > Math.abs(ydif) && Math.abs(xdif) > SWIPE_DISTANCE_THRESHOLD && swipeTime.elapsed() < SWIPE_TIME_THRESHOLD)
+                {
+                    if(game_state.equals(State.SCANNING_ENVIRONMENT))
+                    {
+                        stopScanning();
+                        tappedOnce = false;
+                    }
+
+                    if(xdif < 0) player.Jump();
+                    else player.Slide();
+                }
+                break;
+            case REVERSE_PORTRAIT:
+                if(Math.abs(xdif) > Math.abs(ydif) && Math.abs(xdif) > SWIPE_DISTANCE_THRESHOLD && swipeTime.elapsed() < SWIPE_TIME_THRESHOLD)
+                {
+                    if(game_state.equals(State.SCANNING_ENVIRONMENT))
+                    {
+                        stopScanning();
+                        tappedOnce = false;
+                    }
+
+                    if(xdif > 0) player.Jump();
+                    else player.Slide();
+                }
+                break;
         }
+
+
     }
 
     private void startScanningCheck()
@@ -452,44 +502,94 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
             return;
         }
 
+
         if((int)new_accelY == 0)
         {
-            if((int)new_accelX > 0)
+            if((int)new_accelX > 0) //landscape
             {
-                angle = 0;
+                if(orientation == Orientation.LANDSCAPE) return;
+
+                if(orientation_last_frame != Orientation.LANDSCAPE)
+                {
+                    orientation_last_frame = Orientation.LANDSCAPE;
+                    accelerometer_rotate_time.stop();
+                    accelerometer_rotate_time.start();
+                }
+                else if(accelerometer_rotate_time.elapsed() > 100)
+                {
+                    //player.offsetSlightly();
+                    orientation = Orientation.LANDSCAPE;
+                    angle = 0;
+                    camera_translation_offset_y = 0;
+                    SWIPE_DISTANCE_THRESHOLD = HEIGHT / 5;
+                }
             }
-            else
+            else //reverse landscape
             {
-                angle = 180;
+                if(orientation == Orientation.REVERSE_LANDSCAPE) return;
+
+                if(orientation_last_frame != Orientation.REVERSE_LANDSCAPE)
+                {
+                    orientation_last_frame = Orientation.REVERSE_LANDSCAPE;
+                    accelerometer_rotate_time.stop();
+                    accelerometer_rotate_time.start();
+                }
+                else if(accelerometer_rotate_time.elapsed() > 100)
+                {
+                    //player.offsetSlightly();
+                    orientation = Orientation.REVERSE_LANDSCAPE;
+                    angle = 0;
+                    camera_translation_offset_y = 0;
+                    SWIPE_DISTANCE_THRESHOLD = HEIGHT / 5;
+                }
             }
+
         }
         else if((int)new_accelX == 0)
         {
-            if((int)new_accelY > 0)
+//            angle = 180;
+//            SWIPE_DISTANCE_THRESHOLD = WIDTH / 5;
+            if((int)new_accelY > 0) //Portrait
             {
-                angle = 270;
+                if(orientation == Orientation.PORTRAIT) return;
+
+                if(orientation_last_frame != Orientation.PORTRAIT)
+                {
+                    orientation_last_frame = Orientation.PORTRAIT;
+                    accelerometer_rotate_time.stop();
+                    accelerometer_rotate_time.start();
+                }
+                else if(accelerometer_rotate_time.elapsed() > 100)
+                {
+                    //player.offsetSlightly();
+                    orientation = Orientation.PORTRAIT;
+                    angle = 180;
+                    camera_translation_offset_y = 400;
+                    SWIPE_DISTANCE_THRESHOLD = WIDTH / 5;
+                }
+//                orientation = Orientation.PORTRAIT;
+//                camera_translation_offset_y = 400;
             }
-            else
+            else //Reverse portrait
             {
-                angle = 90;
+                if(orientation == Orientation.REVERSE_PORTRAIT) return;
+
+                if(orientation_last_frame != Orientation.REVERSE_PORTRAIT)
+                {
+                    orientation_last_frame = Orientation.REVERSE_PORTRAIT;
+                    accelerometer_rotate_time.stop();
+                    accelerometer_rotate_time.start();
+                }
+                else if(accelerometer_rotate_time.elapsed() > 100)
+                {
+                    //player.offsetSlightly();
+                    orientation = Orientation.REVERSE_PORTRAIT;
+                    angle = 180;
+                    camera_translation_offset_y = -400;
+                    SWIPE_DISTANCE_THRESHOLD = WIDTH / 5;
+                }
             }
         }
-//        if(Math.abs(prev_accelY - new_accelY) > ACCELEROMETER_THRESHOLD)
-//        {
-//            System.out.println("TIME TO CHECK SOME ACCELEROMETER STUFF!");
-//
-//            //clockwise rotation, x decreasing
-//            if(prev_accelX > new_accelX)
-//            {
-//                //y increasing
-//                if(prev_accelY < new_accelY)
-//                {
-//                    angle = new_accelX * 10;
-//                }
-//            }
-//            prev_accelY = new_accelY;
-//            prev_accelX = new_accelX;
-//        }
     }
 
     private void Cleanup()
@@ -537,7 +637,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
             super.draw(canvas);
             canvas.rotate(angle, canvas.getWidth() / 2, canvas.getHeight() / 2);
 //canvas.getm
-            canvas.translate(Utils.dipToPix(100), 0);
+            //canvas.translate(Utils.dipToPix(100), 0);
             //if angle has been changed, update camera
             if(angle != prev_angle)
             {
