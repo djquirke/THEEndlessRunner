@@ -70,9 +70,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
     private static float ACCELEROMETER_THRESHOLD = 1.0f;
     private float angle = 0;
     private float prev_angle = 0;
+    private float goal_angle = 0;
     public static Orientation orientation = Orientation.LANDSCAPE;
     private Stopwatch accelerometer_rotate_time = new Stopwatch();
     private Orientation orientation_last_frame = Orientation.LANDSCAPE;
+    private Stopwatch angle_lerp_timer = new Stopwatch();
 
     public GamePanel(Context context)
     {
@@ -98,8 +100,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         camera.InitialiseScanRect();
         gyro_scan_img = BitmapFactory.decodeResource(getResources(), R.mipmap.gyroradius);
         gyro_scan_img = Bitmap.createScaledBitmap(gyro_scan_img,
-                         Utils.dipToPix(camera.getScanRect().width() + 4),
-                        Utils.dipToPix(camera.getScanRect().height() + 4), false);
+                Utils.dipToPix(camera.getScanRect().width()),
+                Utils.dipToPix(camera.getScanRect().height()), false);
 
         //add the callback to the surfaceholder to intercept events
         getHolder().addCallback(this);
@@ -472,6 +474,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                 Vector2f new_cam_pos = lerp(start_camera_pos, target_camera_pos, camera_transition_step.elapsed() / 1000f);
                 camera.setCamera(new_cam_pos.x, new_cam_pos.y);
                 break;
+            case LERP_ANGLE:
+                if(angle_lerp_timer.elapsed() >= 200)
+                {
+                    angle = goal_angle;
+                    angle_lerp_timer.stop();
+                    game_state = State.PLAYING;
+                    break;
+                }
+                angle = lerpNum(prev_angle, goal_angle, angle_lerp_timer.elapsed() / 200f);
+                System.out.println("lerped cam angle:" + angle + " " + prev_angle + " " + goal_angle);
+                break;
             case COOLDOWN:
                 if(cooldown_timer.elapsed() > time_to_cooldown)
                 {
@@ -489,6 +502,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
             if(obj.isAlive())
                 obj.update();
         }
+    }
+
+    private float lerpNum(float prev_angle, float goal_angle, float v)
+    {
+        return prev_angle + (goal_angle - prev_angle) * v;
     }
 
     private void CheckAccelerometerChanges()
@@ -519,7 +537,22 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                 {
                     //player.offsetSlightly();
                     orientation = Orientation.LANDSCAPE;
-                    angle = 0;
+                    angle_lerp_timer.start();
+                    goal_angle = 0;
+                    game_state = State.LERP_ANGLE;
+//                    switch (orientation)
+//                    {
+//                        case LANDSCAPE:
+//                            prev_angle = 0;
+//                            break;
+//                        case REVERSE_LANDSCAPE:
+//                            break;
+//                        case PORTRAIT:
+//                            break;
+//                        case REVERSE_PORTRAIT:
+//                            break;
+//                    }
+                    //angle = 0;
                     camera_translation_offset.x = 0;
                     camera_translation_offset.y = 0;
                     SWIPE_DISTANCE_THRESHOLD = HEIGHT / 5;
@@ -539,7 +572,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                 {
                     //player.offsetSlightly();
                     orientation = Orientation.REVERSE_LANDSCAPE;
-                    angle = 0;
+                    angle_lerp_timer.start();
+                    goal_angle = 0;
+                    game_state = State.LERP_ANGLE;
+                    //angle = 0;
                     camera_translation_offset.x = Utils.dipToPix(WIDTH - WIDTH / 4);
                     camera_translation_offset.y = 0;
                     SWIPE_DISTANCE_THRESHOLD = HEIGHT / 5;
@@ -565,8 +601,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                 {
                     //player.offsetSlightly();
                     orientation = Orientation.PORTRAIT;
-                    angle = 180;
-                    camera_translation_offset.x = 0;
+                    angle_lerp_timer.start();
+                    goal_angle = 180;
+                    game_state = State.LERP_ANGLE;
+                    //angle = 180;
+                    camera_translation_offset.x = 1500;
                     camera_translation_offset.y = 450;
                     SWIPE_DISTANCE_THRESHOLD = WIDTH / 5;
                 }
@@ -587,8 +626,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                 {
                     //player.offsetSlightly();
                     orientation = Orientation.REVERSE_PORTRAIT;
-                    angle = 180;
-                    camera_translation_offset.x = 0;
+                    angle_lerp_timer.start();
+                    goal_angle = 180;
+                    game_state = State.LERP_ANGLE;
+                    //angle = 180;
+                    camera_translation_offset.x = -1500;
                     camera_translation_offset.y = -450;
                     SWIPE_DISTANCE_THRESHOLD = WIDTH / 5;
                 }
@@ -603,7 +645,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
             obj.Destroy();
         }
 
-        gyro_scan_img.recycle();
+        if(gyro_scan_img != null)
+            gyro_scan_img.recycle();
         entities.clear();
 
     }
@@ -639,15 +682,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         if(canvas != null)
         {
             super.draw(canvas);
+            //Vector2f temp = camera.translate(camera_translation_offset);
             canvas.translate(camera_translation_offset.x, camera_translation_offset.y);
             canvas.rotate(angle, canvas.getWidth() / 2, canvas.getHeight() / 2);
 //canvas.getm
             //canvas.translate(Utils.dipToPix(100), 0);
             //if angle has been changed, update camera
-            if(angle != prev_angle)
+            if(goal_angle != prev_angle && game_state != State.LERP_ANGLE)
             {
                 //camera.rotate(angle);
-                camera.setAngle(angle);
+                //amera.setAngle(angle);
                 camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
                 prev_angle = angle;
             }
@@ -687,7 +731,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 //                    break;
 //            }
             player.draw(canvas);
-            player.drawDebug(canvas, Color.RED);
+           // player.drawDebug(canvas, Color.RED);
            // canvas.restore();
 
 //            Paint p = new Paint();

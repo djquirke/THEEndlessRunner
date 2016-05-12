@@ -196,4 +196,21 @@ public class Camera {
         this.angle = angle;
 
     }
+
+    public Vector2f translate(Vector2f translation)
+    {
+        Vector2f temp_pos = new Vector2f(pos.x, pos.y);
+        temp_pos.x -= translation.x;
+        temp_pos.y += translation.y;
+
+        if(temp_pos.x < 0) temp_pos.x = pos.x;
+        else if(temp_pos.x > map_width - width) temp_pos.x = (temp_pos.x + width) - map_width;
+        else temp_pos.x = translation.x;
+        if(temp_pos.y < 0) temp_pos.y = -pos.y;
+        else if(temp_pos.y > map_height - height) temp_pos.y = -((temp_pos.y + height) - map_height);
+        else temp_pos.y = translation.y;
+
+        System.out.println("POS AFTER TRANSLATION: " + temp_pos.x + " " + temp_pos.y);
+        return temp_pos;
+    }
 }

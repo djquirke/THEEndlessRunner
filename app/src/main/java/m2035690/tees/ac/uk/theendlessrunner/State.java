@@ -6,5 +6,6 @@ public enum State
     PLAYING,
     SCANNING_ENVIRONMENT,
     LERP_CAMERA,
+    LERP_ANGLE,
     COOLDOWN
 }
