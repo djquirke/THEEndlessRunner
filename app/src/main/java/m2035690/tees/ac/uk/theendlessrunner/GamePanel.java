@@ -30,7 +30,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
 
     public static Vector2f player_spawn;
     public static Vector2f camera_offset;
-    private float camera_translation_offset_y = 0;
+    private Vector2f camera_translation_offset = new Vector2f();
     private static Player player;
     public static Camera camera;
     private static int num_coins = 0;
@@ -520,7 +520,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                     //player.offsetSlightly();
                     orientation = Orientation.LANDSCAPE;
                     angle = 0;
-                    camera_translation_offset_y = 0;
+                    camera_translation_offset.x = 0;
+                    camera_translation_offset.y = 0;
                     SWIPE_DISTANCE_THRESHOLD = HEIGHT / 5;
                 }
             }
@@ -539,7 +540,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                     //player.offsetSlightly();
                     orientation = Orientation.REVERSE_LANDSCAPE;
                     angle = 0;
-                    camera_translation_offset_y = 0;
+                    camera_translation_offset.x = Utils.dipToPix(WIDTH - WIDTH / 4);
+                    camera_translation_offset.y = 0;
                     SWIPE_DISTANCE_THRESHOLD = HEIGHT / 5;
                 }
             }
@@ -564,7 +566,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                     //player.offsetSlightly();
                     orientation = Orientation.PORTRAIT;
                     angle = 180;
-                    camera_translation_offset_y = 400;
+                    camera_translation_offset.x = 0;
+                    camera_translation_offset.y = 450;
                     SWIPE_DISTANCE_THRESHOLD = WIDTH / 5;
                 }
 //                orientation = Orientation.PORTRAIT;
@@ -585,7 +588,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                     //player.offsetSlightly();
                     orientation = Orientation.REVERSE_PORTRAIT;
                     angle = 180;
-                    camera_translation_offset_y = -400;
+                    camera_translation_offset.x = 0;
+                    camera_translation_offset.y = -450;
                     SWIPE_DISTANCE_THRESHOLD = WIDTH / 5;
                 }
             }
@@ -635,6 +639,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
         if(canvas != null)
         {
             super.draw(canvas);
+            canvas.translate(camera_translation_offset.x, camera_translation_offset.y);
             canvas.rotate(angle, canvas.getWidth() / 2, canvas.getHeight() / 2);
 //canvas.getm
             //canvas.translate(Utils.dipToPix(100), 0);
@@ -646,6 +651,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Se
                 camera.setCamera(player.getX() - camera_offset.x, player.getY() - camera_offset.y);
                 prev_angle = angle;
             }
+
 
             canvas.drawColor(Color.YELLOW); //reset canvas to yellow
 
