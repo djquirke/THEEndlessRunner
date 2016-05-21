@@ -2,9 +2,7 @@ package m2035690.tees.ac.uk.theendlessrunner;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,6 +21,8 @@ public class MainMenu extends Activity {
 
         //set to full screen
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        Hiscores.Initialise(this);
 
         setContentView(R.layout.activity_main_menu);
     }
@@ -52,6 +52,12 @@ public class MainMenu extends Activity {
     public void onPlayClick(View v)
     {
         Intent i = new Intent(getApplicationContext(), LevelSelect.class);
+        startActivity(i);
+    }
+
+    public void onHiscoreClick(View v)
+    {
+        Intent i = new Intent(getApplicationContext(), Hiscores.class);
         startActivity(i);
     }
 }

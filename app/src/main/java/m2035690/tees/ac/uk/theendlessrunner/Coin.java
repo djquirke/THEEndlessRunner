@@ -2,7 +2,6 @@ package m2035690.tees.ac.uk.theendlessrunner;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Rect;
 
 
 public class Coin extends GameObject {
@@ -21,8 +20,7 @@ public class Coin extends GameObject {
     @Override
     public void Destroy()
     {
-        //if(!spritesheet.isRecycled())
-            spritesheet.recycle();
+        spritesheet.recycle();
     }
 
 
@@ -32,7 +30,7 @@ public class Coin extends GameObject {
     @Override
     public void draw(Canvas canvas)
     {
-       // if(this.getRect().intersect(GamePanel.camera.getRect()))
+        //if(this.getRect().intersect(GamePanel.camera.getRect()))
         {
             Vector2f campos = GamePanel.camera.getPos();
             canvas.drawBitmap(animation.getImage(), Utils.dipToPix(pos.x - campos.x),
@@ -55,6 +53,5 @@ public class Coin extends GameObject {
         animation = new Animation();
         animation.setFrames(image);
         animation.setDelay(delay);
-        //animation.setColRect(colRect);
     }
 }

@@ -14,10 +14,7 @@ public class GameObject {
     protected boolean isAlive = true;
     protected int rotation_angle = 0;
 
-    public void setX(int x) {this.pos.x = x;}
-    public void setY(int y) {this.pos.y = y;}
     public void setPos(Vector2f pos) {this.pos.x = pos.x; this.pos.y = pos.y;}
-    public void setPos(float x, float y) {this.pos.x = x; this.pos.y = y;}
     public float getX() {return pos.x;}
     public float getY() {return pos.y;}
     public Vector2f getPos() {return pos;}
@@ -51,7 +48,6 @@ public class GameObject {
 
     }
 
-    public void setColRect(Rect rect) {collisionRect = rect;}
     public void setColRect(int left, int top, int right, int bottom)
     {
         collisionRect.left = left;
@@ -78,15 +74,10 @@ public class GameObject {
     @Override
     public boolean equals(Object other)
     {
-        boolean ret = false;
-
         GameObject obj = (GameObject) other;
 
         return (this.tag.equals(obj.tag) && this.pos == obj.pos);
     }
 
-    public void Destroy()
-    {
-
-    }
+    public void Destroy() {}
 }

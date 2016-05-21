@@ -2,9 +2,7 @@ package m2035690.tees.ac.uk.theendlessrunner;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -51,8 +49,6 @@ public class LevelSelect extends Activity {
 
     public void onBackClick(View v)
     {
-        //Intent i = new Intent(getApplicationContext(), MainMenu.class);
-        //startActivity(i);
         finish();
     }
 

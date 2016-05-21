@@ -3,15 +3,13 @@ package m2035690.tees.ac.uk.theendlessrunner;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
-
 public class Spike extends GameObject {
     Bitmap image;
 
     @Override
     public void Destroy()
     {
-        //if(!image.isRecycled())
-            image.recycle();
+        image.recycle();
     }
 
     public Spike(Bitmap image, Vector2f pos)

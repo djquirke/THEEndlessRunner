@@ -1,8 +1,5 @@
 package m2035690.tees.ac.uk.theendlessrunner;
 
-/**
- * Created by Dan on 26/02/2016.
- */
 public class Vector2f {
     float x, y;
 

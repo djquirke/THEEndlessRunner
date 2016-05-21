@@ -17,9 +17,8 @@ public class Player extends GameObject {
     private static final long DEATH_TIME = 1500;
 
     private Bitmap spritesheet;
-    private HashMap<String, Animation> animations = new HashMap<String, Animation>();
+    private HashMap<String, Animation> animations = new HashMap<>();
     private String currentAnimation;
-    private int score;
     private int moveSpeed;
     private float velocity;
     private boolean jump, slide, playing;
@@ -34,8 +33,7 @@ public class Player extends GameObject {
     @Override
     public void Destroy()
     {
-        //if(!spritesheet.isRecycled())
-            spritesheet.recycle();
+        spritesheet.recycle();
     }
 
     public Player(Bitmap res, Vector2f pos, int w, int h)
@@ -56,8 +54,11 @@ public class Player extends GameObject {
     {
         Bitmap[] image = new Bitmap[numFrames];
 
+        System.out.println(spritesheet.getWidth());
+
         for(int i = 0; i < numFrames; i++)
         {
+            System.out.println((i * frame_w + xpos) + " " + ypos);
             image[i] = Bitmap.createBitmap(spritesheet, i * frame_w + xpos, ypos, frame_w, frame_h);
         }
 
@@ -105,6 +106,7 @@ public class Player extends GameObject {
             }
         }
 
+        //move differently based on orientation of device
         switch (GamePanel.orientation)
         {
             case LANDSCAPE:
@@ -165,9 +167,6 @@ public class Player extends GameObject {
                 break;
         }
 
-
-
-
         if(!isAlive && timeDead.elapsed() > DEATH_TIME)
         {
             Restart();
@@ -183,7 +182,6 @@ public class Player extends GameObject {
         stopSliding();
         stopJumping();
 
-        //TODO: remove this when proper loading implemented
         GamePanel.Reset();
     }
 
@@ -206,11 +204,11 @@ public class Player extends GameObject {
 
         Matrix m = new Matrix();
 
+        //rotate bitmap matrix based on phone orientation
         switch (GamePanel.orientation)
         {
             case LANDSCAPE:
                 m.postRotate(0, getAnimation().getImage().getWidth() / 2, getAnimation().getImage().getHeight() / 2);
-
                 break;
             case REVERSE_LANDSCAPE:
                 m.postRotate(180, getAnimation().getImage().getWidth() / 2, getAnimation().getImage().getHeight() / 2);
@@ -232,98 +230,67 @@ public class Player extends GameObject {
     {
         if(colRect.setIntersect(other.getColRect(), this.getColRect()) && isAlive)
         {
-            if(other.tag.equals("spike"))
-            {
-                Die();
-            }
-            else if (other.tag.equals("wall"))
-            {
-                collidedThisFrame = true;
+            switch (other.tag) {
+                case "spike":
+                    Die();
+                    break;
+                case "wall":
+                    collidedThisFrame = true;
 
-                if(jump || falling)
-                    stopJumping();
+                    if (jump || falling)
+                        stopJumping();
 
-                Rect playerRect = getColRect();
+                    Rect playerRect = getColRect();
 
-                switch (GamePanel.orientation)
-                {
-                    case LANDSCAPE:
-                        if(colRect.top == playerRect.top) Die(); //Headbutt
-                        else if(colRect.top > playerRect.top)
-                        {
-                            int colRectHeight = Math.abs(colRect.bottom - colRect.top);
+                    //collision detection different based on phone orientation
+                    //because the floor is in a different direction
+                    switch (GamePanel.orientation) {
+                        case LANDSCAPE:
+                            if (colRect.top == playerRect.top) Die(); //Headbutt
+                            else if (colRect.top > playerRect.top) {
+                                int colRectHeight = Math.abs(colRect.bottom - colRect.top);
 
-                            if(colRectHeight < this.height / 2)
-                            {
-                                pos.y -= colRectHeight;//prev_pos.y;
+                                if (colRectHeight < this.height / 2) pos.y -= colRectHeight;
+                                else Die();
                             }
-                            else
-                            {
-                                Die();
-                            }
-                        }
-                        break;
-                    case REVERSE_LANDSCAPE:
-                        if(colRect.bottom == playerRect.bottom) Die(); //Headbutt
-                        else if(colRect.bottom < playerRect.bottom)
-                        {
-                            int colRectHeight = Math.abs(colRect.bottom - colRect.top);
+                            break;
+                        case REVERSE_LANDSCAPE:
+                            if (colRect.bottom == playerRect.bottom) Die(); //Headbutt
+                            else if (colRect.bottom < playerRect.bottom) {
+                                int colRectHeight = Math.abs(colRect.bottom - colRect.top);
 
-                            if(colRectHeight < this.height / 2)
-                            {
-                                pos.y += colRectHeight;//prev_pos.y;
+                                if (colRectHeight < this.height / 2) pos.y += colRectHeight;
+                                else Die();
                             }
-                            else
-                            {
-                                Die();
-                            }
-                        }
-                        break;
-                    case PORTRAIT:
-                        if(colRect.right == playerRect.right) Die(); //Headbutt
-                        else if(colRect.right < playerRect.right)
-                        {
-                            int colRectHeight = Math.abs(colRect.left - colRect.right);
+                            break;
+                        case PORTRAIT:
+                            if (colRect.right == playerRect.right) Die(); //Headbutt
+                            else if (colRect.right < playerRect.right) {
+                                int colRectHeight = Math.abs(colRect.left - colRect.right);
 
-                            if(colRectHeight < this.width / 2)
-                            {
-                                pos.x += colRectHeight;//prev_pos.y;
+                                if (colRectHeight < this.width / 2) pos.x += colRectHeight;
+                                else Die();
                             }
-                            else
-                            {
-                                Die();
-                            }
-                        }
-                        break;
-                    case REVERSE_PORTRAIT:
-                        if(colRect.left == playerRect.left) Die(); //Headbutt
-                        else if(colRect.left > playerRect.left)
-                        {
-                            int colRectHeight = Math.abs(colRect.left - colRect.right);
+                            break;
+                        case REVERSE_PORTRAIT:
+                            if (colRect.left == playerRect.left) Die(); //Headbutt
+                            else if (colRect.left > playerRect.left) {
+                                int colRectHeight = Math.abs(colRect.left - colRect.right);
 
-                            if(colRectHeight < this.width / 2)
-                            {
-                                pos.x -= colRectHeight;//prev_pos.y;
+                                if (colRectHeight < this.width / 2) pos.x -= colRectHeight;
+                                else Die();
                             }
-                            else
-                            {
-                                Die();
-                            }
-                        }
-                        break;
-                }
+                            break;
+                    }
 
-            }
-            else if(other.tag.equals("prog_door"))
-            {
-                quit = true;
-                //GamePanel.Quit();
-                //System.out.println("hit end door");
-            }
-            else if(other.tag.equals("coin"))
-            {
-                GamePanel.incrementCoins();
-                other.setAlive(false);
+                    break;
+                case "prog_door":
+                    quit = true;
+                    break;
+                case "coin":
+                    GamePanel.incrementCoins();
+                    other.setAlive(false);
+                    break;
             }
         }
     }
@@ -345,8 +312,6 @@ public class Player extends GameObject {
         getAnimation().setFrame(0);
     }
 
-    public int getScore() {return score;}
-    public void resetScore() {score = 0;}
     public boolean getPlaying() {return playing;}
     public void setPlaying(boolean b) {playing = b;}
     private Animation getAnimation() {return animations.get(currentAnimation);}
